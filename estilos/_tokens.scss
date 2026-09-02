@@ -1,0 +1,117 @@
+// ---------------------------------------------------------------------------
+// Tokens de diseno — unica fuente de verdad de colores, tipografia y espaciado.
+//
+// Los usan el PDF (api/src/pdf/estilos.scss) y, desde la Fase 4, el front Angular.
+// Estan aca y no adentro de la app para que el presupuesto que el cliente recibe
+// impreso y la pantalla donde se arma se vean como la misma herramienta.
+//
+// Angular los toma agregando esta carpeta a stylePreprocessorOptions.includePaths,
+// y despues `@use 'tokens' as t;` desde cualquier componente.
+// ---------------------------------------------------------------------------
+
+@use 'sass:color';
+
+// --- Color ------------------------------------------------------------------
+
+$tinta:            #1a1d21;  // texto principal
+$tinta-suave:      #5a6169;  // etiquetas, texto secundario
+$tinta-tenue:      #8b939c;  // notas al pie, texto deshabilitado
+
+$papel:            #ffffff;
+$papel-alterno:    #f6f7f9;  // filas cebra, bloques de datos
+$borde:            #dfe3e8;
+$borde-fuerte:     #b8c0c9;
+
+$marca:            #1f5f8b;  // azul sobrio: legible impreso y en pantalla
+$marca-clara:      #e8f1f7;
+$marca-oscura:     color.adjust($marca, $lightness: -12%);
+
+$exito:            #1f7a4d;
+$alerta:           #b26a00;  // precios desactualizados, costeo parcial
+$error:            #b3261e;
+
+// --- Tipografia -------------------------------------------------------------
+
+// Sin webfonts a proposito: el PDF se genera sin red y una fuente que no carga
+// desplaza todo el layout. Estas estan en cualquier Windows, macOS y Linux.
+$fuente-base: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+// Tabular para que las columnas de importes queden alineadas por la coma.
+$fuente-numeros: 'Consolas', 'SF Mono', 'DejaVu Sans Mono', monospace;
+
+$texto-xs:   9pt;
+$texto-sm:   10pt;
+$texto-base: 11pt;
+$texto-md:   13pt;
+$texto-lg:   16pt;
+$texto-xl:   22pt;
+
+$peso-normal:   400;
+$peso-medio:    600;
+$peso-fuerte:   700;
+
+// --- Tipografia y espaciado de PANTALLA -------------------------------------
+//
+// El papel se mide en pt y la pantalla en rem: la misma escala no sirve para los
+// dos. Los COLORES si se comparten, que es lo que hace que el presupuesto impreso
+// y la app se lean como la misma herramienta.
+
+$p-texto-xs:   0.75rem;
+$p-texto-sm:   0.8125rem;
+$p-texto-base: 0.9375rem;
+$p-texto-md:   1.0625rem;
+$p-texto-lg:   1.375rem;
+$p-texto-xl:   2rem;
+$p-texto-2xl:  2.75rem;   // el precio de venta en la calculadora
+
+$p-1: 0.25rem;
+$p-2: 0.5rem;
+$p-3: 0.75rem;
+$p-4: 1rem;
+$p-5: 1.5rem;
+$p-6: 2rem;
+$p-7: 3rem;
+
+$p-radio:        6px;
+$p-radio-grande: 10px;
+
+$sombra-1: 0 1px 2px rgba(0, 0, 0, 0.06);
+$sombra-2: 0 2px 8px rgba(0, 0, 0, 0.08);
+$sombra-3: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+$quiebre-mobile:  640px;
+$quiebre-tablet:  960px;
+$quiebre-ancho:   1280px;
+
+// --- Espaciado del PDF (pt) -------------------------------------------------
+
+$e-1: 2pt;
+$e-2: 4pt;
+$e-3: 8pt;
+$e-4: 12pt;
+$e-5: 16pt;
+$e-6: 24pt;
+$e-7: 32pt;
+
+$radio:        3pt;
+$radio-grande: 6pt;
+
+// --- Pagina -----------------------------------------------------------------
+
+$pagina-ancho:  210mm;  // A4
+$pagina-alto:   297mm;
+$pagina-margen: 14mm;
+
+// --- Estados del presupuesto ------------------------------------------------
+// Mismo color para el sello del PDF y para el chip del listado en Angular.
+
+$estados: (
+  'BORRADOR':  $tinta-tenue,
+  'ENVIADO':   $marca,
+  'ACEPTADO':  $exito,
+  'RECHAZADO': $error,
+  'VENCIDO':   $alerta,
+);
+
+@function color-estado($estado) {
+  @return map-get($estados, $estado);
+}

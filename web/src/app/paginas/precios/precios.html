@@ -1,0 +1,142 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Actualizar precios</h1>
+    <p class="subtitulo">
+      Cargá la lista nueva del proveedor de una sola vez. Escribí solo los que cambiaron.
+    </p>
+  </div>
+  <div class="cabecera__acciones">
+    <button type="button" class="boton boton--secundario" (click)="limpiar()">Limpiar</button>
+    <button
+      type="button"
+      class="boton boton--primario"
+      [disabled]="!hayCambios() || guardando()"
+      (click)="guardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar ' + aCargar().length + ' precio(s)' }}
+    </button>
+  </div>
+</header>
+
+<div class="filtros">
+  <label class="campo">
+    <span class="etiqueta">Proveedor de esta lista</span>
+    <input
+      type="text"
+      class="control"
+      placeholder="Ej: Insumos SRL"
+      [ngModel]="proveedor()"
+      (ngModelChange)="proveedor.set($event)"
+    />
+  </label>
+  <label class="campo campo--en-linea">
+    <input
+      type="checkbox"
+      [ngModel]="soloDesactualizados()"
+      (ngModelChange)="soloDesactualizados.set($event)"
+    />
+    <span>Solo los que están vencidos ({{ catalogo.insumosDesactualizados() }})</span>
+  </label>
+</div>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Insumo</th>
+          <th class="numerico">Presentación</th>
+          <th class="numerico">Precio actual</th>
+          <th class="numerico">Precio nuevo</th>
+          <th class="numerico">Queda en</th>
+          <th class="numerico">Var.</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (fila of visibles(); track fila.insumo.id) {
+          <tr [class.fila--tocada]="previsualizar(fila) !== null">
+            <td>
+              <strong>{{ fila.insumo.nombre }}</strong>
+              @if (fila.insumo.precioDesactualizado) {
+                <br />
+                <span class="marca-vieja">
+                  @if (fila.insumo.precioVigente) {
+                    Hace {{ fila.insumo.diasDesdeUltimoPrecio }} días
+                  } @else {
+                    Sin precio
+                  }
+                </span>
+              }
+            </td>
+            <td class="celda-presentacion">
+              <input
+                type="text"
+                class="control control--numero"
+                inputmode="decimal"
+                [ngModel]="fila.cantidadTexto"
+                (ngModelChange)="escribirCantidad(fila.insumo.id, $event)"
+              />
+              <span class="tenue">{{ etiquetasUnidad[fila.insumo.unidadUso] }}</span>
+            </td>
+            <td class="numerico importe suave">
+              @if (fila.insumo.precioVigente; as p) {
+                {{ p.precioPresentacion | pesos }}
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td>
+              <input
+                type="text"
+                class="control control--numero"
+                inputmode="decimal"
+                placeholder="—"
+                [ngModel]="fila.precioTexto"
+                (ngModelChange)="escribirPrecio(fila.insumo.id, $event)"
+              />
+            </td>
+            <td class="numerico importe">
+              @if (previsualizar(fila); as p) {
+                {{ p | pesosM }}
+                <br />
+                <small class="tenue">por {{ etiquetasUnidad[fila.insumo.unidadUso] }}</small>
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td class="numerico">
+              @if (variacion(fila); as v) {
+                <span [class.suba]="v > 0" [class.baja]="v < 0">
+                  {{ v > 0 ? '+' : '' }}{{ v }}%
+                </span>
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="vacio">No hay insumos para mostrar.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (hayCambios()) {
+  <div class="aviso aviso--info barra-guardar">
+    <div>
+      Vas a cargar <strong>{{ aCargar().length }}</strong> precio(s) nuevos. Los anteriores quedan
+      en el historial, así que los presupuestos ya emitidos no se mueven.
+    </div>
+    <button
+      type="button"
+      class="boton boton--primario"
+      [disabled]="guardando()"
+      (click)="guardar()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar todo' }}
+    </button>
+  </div>
+}

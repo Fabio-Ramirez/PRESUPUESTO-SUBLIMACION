@@ -1,0 +1,53 @@
+@use 'tokens' as t;
+
+.secciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: t.$p-4;
+  align-items: start;
+}
+
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: t.$p-3;
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: t.$p-4 0 t.$p-2;
+
+  .etiqueta {
+    margin: 0;
+  }
+}
+
+.fila-tramo {
+  display: flex;
+  align-items: center;
+  gap: t.$p-2;
+  margin-bottom: t.$p-2;
+  font-size: t.$p-texto-sm;
+
+  .control {
+    width: 90px;
+  }
+}
+
+.logo-previa {
+  display: flex;
+  align-items: center;
+  gap: t.$p-3;
+  margin-bottom: t.$p-2;
+  padding: t.$p-2;
+  background: t.$papel-alterno;
+  border-radius: t.$p-radio;
+
+  img {
+    max-height: 60px;
+    max-width: 180px;
+    object-fit: contain;
+  }
+}

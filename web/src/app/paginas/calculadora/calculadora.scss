@@ -1,0 +1,215 @@
+@use 'tokens' as t;
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: t.$p-4;
+  margin-bottom: t.$p-4;
+}
+
+/// Los cuatro bloques uno al lado del otro en escritorio, apilados en mobile.
+/// `auto-fit` con minimo de 320px: en pantallas intermedias van de a dos, que es
+/// mejor que apretar cuatro columnas ilegibles.
+.bloques {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: t.$p-4;
+  align-items: start;
+}
+
+.bloque {
+  min-width: 0;
+}
+
+.total-bloque {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$p-3;
+  margin-top: t.$p-3;
+  padding-top: t.$p-3;
+  border-top: 1px solid t.$borde;
+  font-size: t.$p-texto-sm;
+  color: t.$tinta-suave;
+
+  strong {
+    font-size: t.$p-texto-md;
+    color: t.$tinta;
+  }
+}
+
+.desglose {
+  margin: t.$p-3 0 0;
+
+  div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: t.$p-3;
+    padding: t.$p-1 0;
+    font-size: t.$p-texto-sm;
+  }
+
+  dt {
+    color: t.$tinta-suave;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: t.$peso-medio;
+  }
+}
+
+/// Fila de insumo o equipo: selector arriba, numeros abajo.
+/// Una tabla de cinco columnas dentro de un bloque de 300px deja el <select>
+/// reducido a una letra, que es lo que pasaba antes.
+.linea {
+  padding: t.$p-2 0;
+  border-bottom: 1px solid t.$borde;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  &__principal {
+    display: flex;
+    gap: t.$p-2;
+    align-items: center;
+
+    .control {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__detalle {
+    display: flex;
+    align-items: center;
+    gap: t.$p-2;
+    margin-top: t.$p-2;
+    font-size: t.$p-texto-xs;
+  }
+
+  &__num {
+    flex: 0 0 64px;
+    padding: t.$p-1 t.$p-2;
+  }
+
+  &__costo {
+    margin-left: auto;
+    font-size: t.$p-texto-sm;
+  }
+}
+
+.unidad {
+  font-size: t.$p-texto-xs;
+  color: t.$tinta-tenue;
+  white-space: nowrap;
+}
+
+.costo-total {
+  margin: t.$p-4 0;
+  padding: t.$p-3;
+  background: t.$papel-alterno;
+  border-radius: t.$p-radio;
+
+  &__valor {
+    display: block;
+    font-size: t.$p-texto-lg;
+    color: t.$tinta;
+  }
+}
+
+.deslizador {
+  display: flex;
+  align-items: center;
+  gap: t.$p-3;
+
+  input[type='range'] {
+    flex: 1;
+    accent-color: t.$marca;
+  }
+
+  &__numero {
+    width: 90px;
+    flex: 0 0 auto;
+  }
+}
+
+.explicacion {
+  margin: t.$p-3 0;
+  font-size: t.$p-texto-sm;
+  line-height: 1.6;
+}
+
+.tachado {
+  text-decoration: line-through;
+  color: t.$tinta-tenue;
+}
+
+.exito {
+  color: t.$exito;
+}
+
+/// El precio de venta: es el numero que se mira, y tiene que verse desde lejos.
+.precio-final {
+  margin: t.$p-4 0;
+  padding: t.$p-4;
+  border-radius: t.$p-radio-grande;
+  background: t.$marca;
+  color: #fff;
+  text-align: center;
+
+  &__etiqueta {
+    display: block;
+    font-size: t.$p-texto-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.85;
+  }
+
+  &__valor {
+    display: block;
+    font-family: t.$fuente-numeros;
+    font-variant-numeric: tabular-nums;
+    font-size: t.$p-texto-2xl;
+    line-height: 1.1;
+    margin: t.$p-1 0;
+    // Un precio largo no puede desbordar la tarjeta en mobile.
+    overflow-wrap: anywhere;
+  }
+
+  &__nota {
+    font-size: t.$p-texto-xs;
+    opacity: 0.85;
+  }
+}
+
+.lista-avisos {
+  margin: t.$p-1 0 0;
+  padding-left: t.$p-4;
+  font-size: t.$p-texto-xs;
+}
+
+.separador {
+  border: none;
+  border-top: 1px solid t.$borde;
+  margin: t.$p-4 0;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.$p-2;
+
+  .boton {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: t.$quiebre-mobile) {
+  .cabecera {
+    flex-direction: column;
+  }
+}

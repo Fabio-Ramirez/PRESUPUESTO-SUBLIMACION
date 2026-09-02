@@ -1,0 +1,152 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Equipos</h1>
+    <p class="subtitulo">
+      La amortización por unidad se calcula sola: costo dividido vida útil. No se carga a mano.
+    </p>
+  </div>
+  <button type="button" class="boton boton--primario" (click)="abrirNuevo()">+ Nuevo equipo</button>
+</header>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Equipo</th>
+          <th class="numerico">Costo</th>
+          <th class="numerico">Vida útil</th>
+          <th class="numerico">Consumo</th>
+          <th class="numerico">Amortización por unidad</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (equipo of catalogo.equipos(); track equipo.id) {
+          <tr>
+            <td>
+              <strong>{{ equipo.nombre }}</strong>
+              <br />
+              <small class="tenue">Comprado el {{ equipo.fechaCompra | fecha }}</small>
+            </td>
+            <td class="numerico importe">{{ equipo.costoAdquisicion | pesos }}</td>
+            <td class="numerico">{{ equipo.vidaUtilUnidades | cantidad }} u.</td>
+            <td class="numerico">
+              @if (equipo.consumoWatts > 0) {
+                {{ equipo.consumoWatts }} W
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td class="numerico importe destacado">{{ equipo.amortizacionPorUnidad | pesosM }}</td>
+            <td class="tabla__acciones">
+              <button
+                type="button"
+                class="boton boton--secundario boton--chico"
+                (click)="abrirEdicion(equipo)"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                class="boton boton--peligro boton--chico"
+                (click)="desactivar(equipo)"
+              >
+                Baja
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="vacio">
+              Todavía no cargaste equipos. Sin ellos, el costeo no incluye amortizaciones.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (mostrandoForm()) {
+  <div class="modal" (click)="mostrandoForm.set(false)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">{{ editando() ? 'Editar equipo' : 'Nuevo equipo' }}</h2>
+
+      <label class="campo">
+        <span class="etiqueta">Nombre</span>
+        <input
+          type="text"
+          class="control"
+          placeholder="Ej: Impresora Epson L1300"
+          [ngModel]="nombre()"
+          (ngModelChange)="nombre.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Costo de adquisición</span>
+        <input
+          type="text"
+          class="control control--numero"
+          inputmode="decimal"
+          placeholder="845000,00"
+          [ngModel]="costoTexto()"
+          (ngModelChange)="costoTexto.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Vida útil (piezas que se estima que produce)</span>
+        <input
+          type="number"
+          class="control control--numero"
+          min="1"
+          step="1"
+          [ngModel]="vidaUtil()"
+          (ngModelChange)="vidaUtil.set($event || 1)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Consumo eléctrico (watts)</span>
+        <input
+          type="number"
+          class="control control--numero"
+          min="0"
+          step="1"
+          [ngModel]="consumoWatts()"
+          (ngModelChange)="consumoWatts.set($event || 0)"
+        />
+        <small class="tenue">
+          Una plancha ronda los 1400 W y una impresora los 30 W. Con esto y los minutos de uso
+          de cada producto se calcula la energía.
+        </small>
+      </label>
+
+      @if (amortizacionPreview(); as amortizacion) {
+        <div class="aviso aviso--info">
+          <div>
+            Amortización por unidad: <strong class="importe">{{ amortizacion | pesosM }}</strong>
+            <br />
+            <small>Es lo que este equipo le suma al costo de cada pieza que produzca.</small>
+          </div>
+        </div>
+      }
+
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="mostrandoForm.set(false)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="!nombre().trim() || !costoTexto().trim() || guardando()"
+          (click)="guardar()"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,64 @@
+// ---------------------------------------------------------------------------
+// Mixins compartidos entre el PDF y el front.
+// ---------------------------------------------------------------------------
+
+@use 'tokens' as t;
+
+/// Importes: cifras tabulares, alineadas a la derecha y sin partirse de linea.
+/// Que "$ 466.916,40" se corte entre el simbolo y el numero arruina una columna
+/// de totales, y pasa apenas la celda queda un poco angosta.
+@mixin importe {
+  font-family: t.$fuente-numeros;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/// Etiqueta de campo: "CUIT", "Localidad", "Validez".
+@mixin etiqueta {
+  font-size: t.$texto-xs;
+  font-weight: t.$peso-medio;
+  color: t.$tinta-suave;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/// Titulo de seccion con la linea de la marca debajo.
+@mixin titulo-seccion {
+  font-size: t.$texto-sm;
+  font-weight: t.$peso-fuerte;
+  color: t.$marca;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: t.$e-2;
+  border-bottom: 1pt solid t.$borde;
+  margin-bottom: t.$e-3;
+}
+
+/// Bloque de datos con fondo suave (datos del cliente, condiciones de pago).
+@mixin panel($fondo: t.$papel-alterno) {
+  background: $fondo;
+  border: 0.75pt solid t.$borde;
+  border-radius: t.$radio;
+  padding: t.$e-4;
+}
+
+/// Chip de estado. Toma el color de $estados, asi el sello del PDF y el chip del
+/// listado no pueden divergir.
+@mixin chip($color) {
+  display: inline-block;
+  padding: t.$e-1 t.$e-3;
+  border-radius: t.$radio-grande;
+  font-size: t.$texto-xs;
+  font-weight: t.$peso-fuerte;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $color;
+  border: 1pt solid $color;
+}
+
+/// Evita que un bloque quede partido entre dos paginas del PDF.
+@mixin sin-cortar {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}

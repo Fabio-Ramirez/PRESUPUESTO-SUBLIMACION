@@ -1,0 +1,79 @@
+<div class="capa" [class.capa--menu-abierto]="menuAbierto()">
+  <!-- Barra superior: solo se ve en mobile, para abrir el menu -->
+  <header class="barra">
+    <button
+      type="button"
+      class="barra__menu"
+      (click)="menuAbierto.set(!menuAbierto())"
+      [attr.aria-expanded]="menuAbierto()"
+      aria-label="Abrir menú"
+    >
+      ☰
+    </button>
+    <span class="barra__titulo">Calculadora PRO</span>
+  </header>
+
+  <nav class="lateral" (click)="cerrarMenu()">
+    <div class="lateral__marca">
+      <span class="lateral__marca-nombre">Calculadora PRO</span>
+      <span class="lateral__marca-bajada">Sublimación</span>
+    </div>
+
+    @for (g of ['trabajo', 'datos', 'ajustes']; track g) {
+      <ul class="lateral__grupo">
+        @for (item of grupo($any(g)); track item.ruta) {
+          <li>
+            <a
+              class="lateral__link"
+              [routerLink]="item.ruta"
+              routerLinkActive="lateral__link--activo"
+            >
+              <span class="lateral__icono" aria-hidden="true">{{ item.icono }}</span>
+              <span>{{ item.texto }}</span>
+
+              <!-- Insumos con precio viejo: el aviso vive en el menu para que se
+                   vea aunque el usuario esté en otra pantalla. -->
+              @if (item.ruta === '/precios' && catalogo.insumosDesactualizados() > 0) {
+                <span class="lateral__globo" [title]="'Insumos con precio de más de 30 días'">
+                  {{ catalogo.insumosDesactualizados() }}
+                </span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </nav>
+
+  <!-- Tapa el contenido cuando el menu está abierto en mobile -->
+  <div class="velo" (click)="cerrarMenu()"></div>
+
+  <main class="contenido">
+    <router-outlet />
+  </main>
+
+  <div class="avisos" role="status" aria-live="polite">
+    @for (aviso of avisos.lista(); track aviso.id) {
+      <div class="avisos__item avisos__item--{{ aviso.tipo }}">
+        <div class="avisos__texto">
+          {{ aviso.texto }}
+          @if (aviso.detalles?.length) {
+            <ul class="avisos__detalles">
+              @for (d of aviso.detalles; track d) {
+                <li>{{ d }}</li>
+              }
+            </ul>
+          }
+        </div>
+        <button
+          type="button"
+          class="avisos__cerrar"
+          (click)="avisos.cerrar(aviso.id)"
+          aria-label="Cerrar aviso"
+        >
+          ×
+        </button>
+      </div>
+    }
+  </div>
+</div>

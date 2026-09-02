@@ -1,0 +1,309 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Insumos</h1>
+    <p class="subtitulo">
+      Qué es cada insumo y cuánto sale hoy. Los precios no se pisan: se agrega uno nuevo.
+    </p>
+  </div>
+  <div class="cabecera__acciones">
+    <a routerLink="/precios" class="boton boton--secundario">Actualizar lista completa</a>
+    <button type="button" class="boton boton--primario" (click)="mostrandoAlta.set(true)">
+      + Nuevo insumo
+    </button>
+  </div>
+</header>
+
+@if (catalogo.insumosDesactualizados() > 0) {
+  <div class="aviso aviso--alerta margen-abajo">
+    <div>
+      Hay <strong>{{ catalogo.insumosDesactualizados() }}</strong> insumo(s) con precio de más de 30
+      días o sin cargar. Los costeos que los usen van a quedar viejos.
+      <a routerLink="/precios">Actualizar precios →</a>
+    </div>
+  </div>
+}
+
+<div class="filtros">
+  <input
+    type="search"
+    class="control"
+    placeholder="Buscar por nombre…"
+    [ngModel]="busqueda()"
+    (ngModelChange)="busqueda.set($event)"
+  />
+  <select class="control" [ngModel]="filtroTipo()" (ngModelChange)="filtroTipo.set($event)">
+    <option value="">Todos los tipos</option>
+    @for (tipo of tipos; track tipo) {
+      <option [value]="tipo">{{ etiquetasTipo[tipo] }}</option>
+    }
+  </select>
+  <label class="campo campo--en-linea">
+    <input
+      type="checkbox"
+      [ngModel]="soloDesactualizados()"
+      (ngModelChange)="soloDesactualizados.set($event)"
+    />
+    <span>Solo desactualizados</span>
+  </label>
+</div>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Insumo</th>
+          <th>Tipo</th>
+          <th class="numerico">Precio de compra</th>
+          <th class="numerico">Por unidad de uso</th>
+          <th>Actualizado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (insumo of lista(); track insumo.id) {
+          <tr>
+            <td>
+              <strong>{{ insumo.nombre }}</strong>
+              @if (insumo.precioVigente?.proveedor) {
+                <span class="tenue"> · {{ insumo.precioVigente!.proveedor }}</span>
+              }
+            </td>
+            <td class="suave">{{ etiquetasTipo[insumo.tipo] }}</td>
+            <td class="numerico importe">
+              @if (insumo.precioVigente; as p) {
+                {{ p.precioPresentacion | pesos }}
+                <br />
+                <small class="tenue">
+                  {{ p.presentacion.cantidad | cantidad }} {{ etiquetasUnidad[p.presentacion.unidad] }}
+                </small>
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td class="numerico importe">
+              @if (insumo.precioVigente; as p) {
+                {{ p.precioPorUnidadUso | pesosM }}
+                <br />
+                <small class="tenue">por {{ etiquetasUnidad[insumo.unidadUso] }}</small>
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td>
+              @if (avisoPrecio(insumo); as aviso) {
+                <span class="marca-vieja">{{ aviso }}</span>
+              } @else {
+                <span class="suave">{{ insumo.precioVigente!.fecha | fecha }}</span>
+              }
+            </td>
+            <td class="tabla__acciones">
+              <button
+                type="button"
+                class="boton boton--secundario boton--chico"
+                (click)="abrirPrecio(insumo)"
+              >
+                Cargar precio
+              </button>
+              <button
+                type="button"
+                class="boton boton--fantasma boton--chico"
+                (click)="verHistorial(insumo)"
+              >
+                Historial
+              </button>
+              <button
+                type="button"
+                class="boton boton--peligro boton--chico"
+                (click)="desactivar(insumo)"
+              >
+                Baja
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="vacio">No hay insumos que coincidan.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== Alta de insumo ===== -->
+@if (mostrandoAlta()) {
+  <div class="modal" (click)="mostrandoAlta.set(false)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">Nuevo insumo</h2>
+      <p class="subtitulo margen-abajo">
+        Acá se define <em>qué es</em>. El precio se carga después, y queda con fecha.
+      </p>
+
+      <label class="campo">
+        <span class="etiqueta">Nombre</span>
+        <input
+          type="text"
+          class="control"
+          placeholder="Ej: Papel de sublimación A4"
+          [ngModel]="nuevoNombre()"
+          (ngModelChange)="nuevoNombre.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Tipo</span>
+        <select class="control" [ngModel]="nuevoTipo()" (ngModelChange)="nuevoTipo.set($event)">
+          @for (tipo of tipos; track tipo) {
+            <option [value]="tipo">{{ etiquetasTipo[tipo] }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Unidad de uso</span>
+        <select class="control" [ngModel]="nuevaUnidad()" (ngModelChange)="nuevaUnidad.set($event)">
+          @for (u of unidades; track u) {
+            <option [value]="u">{{ etiquetasUnidad[u] }}</option>
+          }
+        </select>
+        <small class="tenue">
+          Cómo se <em>consume</em>, que no siempre es cómo se compra: la resma se compra por resma
+          y se usa por hoja.
+        </small>
+      </label>
+
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="mostrandoAlta.set(false)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="!nuevoNombre().trim() || guardando()"
+          (click)="crear()"
+        >
+          Crear
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Cargar precio ===== -->
+@if (insumoEnPrecio(); as insumo) {
+  <div class="modal" (click)="insumoEnPrecio.set(null)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">Precio de {{ insumo.nombre }}</h2>
+
+      <label class="campo">
+        <span class="etiqueta">Cuánto trae la presentación</span>
+        <div class="campo--en-linea">
+          <input
+            type="number"
+            class="control control--numero"
+            min="0.001"
+            step="any"
+            [ngModel]="presentacionCantidad()"
+            (ngModelChange)="presentacionCantidad.set($event || 1)"
+          />
+          <span class="suave">{{ etiquetasUnidad[insumo.unidadUso] }}</span>
+        </div>
+        <small class="tenue">
+          Ej: una resma de 500 hojas se carga como 500. El precio por hoja lo calcula el sistema
+          sin redondear, que es lo que hace que el costeo dé exacto.
+        </small>
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Precio de la presentación completa</span>
+        <input
+          type="text"
+          class="control control--numero"
+          inputmode="decimal"
+          placeholder="17653,00"
+          [ngModel]="precioTexto()"
+          (ngModelChange)="precioTexto.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Proveedor (opcional)</span>
+        <input
+          type="text"
+          class="control"
+          [ngModel]="proveedor()"
+          (ngModelChange)="proveedor.set($event)"
+        />
+      </label>
+
+      @if (insumo.precioVigente; as anterior) {
+        <p class="subtitulo">
+          Precio actual: {{ anterior.precioPresentacion | pesos }} del
+          {{ anterior.fecha | fecha }}. Se conserva en el historial.
+        </p>
+      }
+
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="insumoEnPrecio.set(null)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="!precioTexto().trim() || guardando()"
+          (click)="guardarPrecio()"
+        >
+          Guardar precio
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Historial ===== -->
+@if (insumoEnHistorial(); as insumo) {
+  <div class="modal" (click)="insumoEnHistorial.set(null)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">Historial de {{ insumo.nombre }}</h2>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th class="numerico">Presentación</th>
+              <th class="numerico">Precio</th>
+              <th class="numerico">Por unidad</th>
+              <th>Proveedor</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of historial(); track p.id; let primero = $first) {
+              <tr>
+                <td>
+                  {{ p.fecha | fecha }}
+                  @if (primero) {
+                    <span class="chip chip--ACEPTADO">vigente</span>
+                  }
+                </td>
+                <td class="numerico">{{ p.presentacion.cantidad | cantidad }}</td>
+                <td class="numerico importe">{{ p.precioPresentacion | pesos }}</td>
+                <td class="numerico importe">{{ p.precioPorUnidadUso | pesosM }}</td>
+                <td class="suave">{{ p.proveedor || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="vacio">Todavía no tiene precios cargados.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="insumoEnHistorial.set(null)">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}

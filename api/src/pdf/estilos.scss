@@ -1,0 +1,343 @@
+// ---------------------------------------------------------------------------
+// Estilos del presupuesto en PDF.
+//
+// Se compila a CSS y se inyecta inline en el HTML: el documento que abre Chromium
+// no pide ni un solo archivo externo, asi que no hay forma de que se genere a
+// medio estilar por un recurso que tardo.
+//
+// Unidades en pt y mm, no px: el destino es papel A4.
+// ---------------------------------------------------------------------------
+
+@use 'tokens' as t;
+@use 'mixins' as m;
+
+// --- Pagina -----------------------------------------------------------------
+
+@page {
+  size: A4;
+  margin: t.$pagina-margen;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: t.$fuente-base;
+  font-size: t.$texto-base;
+  line-height: 1.45;
+  color: t.$tinta;
+  background: t.$papel;
+  // Sin esto Chromium descarta los fondos al imprimir y los paneles salen blancos.
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+// --- Encabezado -------------------------------------------------------------
+
+.encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: t.$e-6;
+  padding-bottom: t.$e-4;
+  border-bottom: 2pt solid t.$marca;
+  @include m.sin-cortar;
+}
+
+.emisor {
+  display: flex;
+  gap: t.$e-4;
+  align-items: flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
+
+  &__logo {
+    // Alto fijo y ancho libre: un logo apaisado y uno cuadrado ocupan lo mismo
+    // de alto y el encabezado no se mueve segun quien lo cargue.
+    height: 22mm;
+    width: auto;
+    max-width: 45mm;
+    object-fit: contain;
+  }
+
+  &__nombre {
+    font-size: t.$texto-lg;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+    line-height: 1.15;
+    margin-bottom: t.$e-2;
+  }
+
+  &__datos {
+    font-size: t.$texto-xs;
+    color: t.$tinta-suave;
+    line-height: 1.6;
+  }
+}
+
+.comprobante {
+  flex: 0 0 auto;
+  text-align: right;
+  min-width: 52mm;
+
+  &__titulo {
+    font-size: t.$texto-md;
+    font-weight: t.$peso-fuerte;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: t.$tinta;
+  }
+
+  &__numero {
+    font-family: t.$fuente-numeros;
+    font-size: t.$texto-xl;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+    line-height: 1.1;
+    margin-bottom: t.$e-3;
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: t.$e-1 t.$e-3;
+    justify-content: end;
+    font-size: t.$texto-xs;
+
+    dt {
+      @include m.etiqueta;
+      text-align: right;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: t.$peso-medio;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+}
+
+// Sello de estado: solo aparece cuando NO es un enviado vigente. Un borrador que
+// se imprime sin distinguirse de un presupuesto emitido es un problema esperando.
+.sello {
+  margin-top: t.$e-3;
+
+  @each $estado, $color in t.$estados {
+    &--#{$estado} {
+      @include m.chip($color);
+    }
+  }
+}
+
+// --- Cliente ----------------------------------------------------------------
+
+.seccion {
+  margin-top: t.$e-6;
+
+  &__titulo {
+    @include m.titulo-seccion;
+  }
+}
+
+.cliente {
+  @include m.panel;
+  @include m.sin-cortar;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: t.$e-2 t.$e-6;
+
+  &__campo {
+    display: flex;
+    gap: t.$e-3;
+    align-items: baseline;
+    font-size: t.$texto-sm;
+    min-width: 0;
+  }
+
+  &__etiqueta {
+    @include m.etiqueta;
+    flex: 0 0 24mm;
+  }
+
+  &__valor {
+    font-weight: t.$peso-medio;
+    overflow-wrap: anywhere;
+  }
+
+  // El nombre ocupa las dos columnas: es lo primero que se busca al recibirlo.
+  &__campo--ancho {
+    grid-column: 1 / -1;
+
+    .cliente__valor {
+      font-size: t.$texto-md;
+      font-weight: t.$peso-fuerte;
+    }
+  }
+}
+
+// --- Tabla del trabajo ------------------------------------------------------
+
+.trabajo {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: t.$texto-sm;
+
+  thead th {
+    @include m.etiqueta;
+    background: t.$marca-clara;
+    color: t.$marca-oscura;
+    text-align: left;
+    padding: t.$e-3;
+    border-bottom: 1pt solid t.$borde-fuerte;
+  }
+
+  tbody td {
+    padding: t.$e-3;
+    border-bottom: 0.75pt solid t.$borde;
+    vertical-align: top;
+  }
+
+  // Cebra suave: con veinte renglones ayuda a no saltar de fila al leer.
+  tbody tr:nth-child(even) td {
+    background: t.$papel-alterno;
+  }
+
+  tbody tr {
+    @include m.sin-cortar;
+  }
+
+  // El encabezado se repite en cada pagina si la tabla se parte.
+  thead {
+    display: table-header-group;
+  }
+
+  &__descripcion {
+    width: 100%;
+    font-weight: t.$peso-medio;
+  }
+
+  &__cantidad {
+    @include m.importe;
+    text-align: center;
+    width: 18mm;
+  }
+
+  &__precio,
+  &__subtotal {
+    @include m.importe;
+    width: 30mm;
+  }
+
+  &__subtotal {
+    font-weight: t.$peso-medio;
+  }
+}
+
+// --- Totales ----------------------------------------------------------------
+
+.totales {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: t.$e-4;
+  @include m.sin-cortar;
+
+  &__tabla {
+    min-width: 78mm;
+    border-collapse: collapse;
+    font-size: t.$texto-sm;
+
+    td {
+      padding: t.$e-2 t.$e-3;
+    }
+
+    td:first-child {
+      color: t.$tinta-suave;
+      text-align: right;
+    }
+
+    td:last-child {
+      @include m.importe;
+      font-weight: t.$peso-medio;
+      min-width: 32mm;
+    }
+  }
+
+  &__descuento td {
+    color: t.$exito;
+  }
+
+  &__neto td {
+    border-top: 0.75pt solid t.$borde;
+  }
+
+  &__total td {
+    border-top: 1.5pt solid t.$marca;
+    padding-top: t.$e-3;
+    font-size: t.$texto-md;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+  }
+}
+
+// --- Condiciones de pago ----------------------------------------------------
+
+.pago {
+  @include m.panel(t.$marca-clara);
+  @include m.sin-cortar;
+  display: flex;
+  gap: t.$e-6;
+
+  &__item {
+    flex: 1;
+  }
+
+  &__etiqueta {
+    @include m.etiqueta;
+    display: block;
+    margin-bottom: t.$e-1;
+  }
+
+  &__monto {
+    font-family: t.$fuente-numeros;
+    font-variant-numeric: tabular-nums;
+    font-size: t.$texto-md;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca-oscura;
+    white-space: nowrap;
+  }
+}
+
+// --- Condiciones generales y pie -------------------------------------------
+
+.condiciones {
+  margin-top: t.$e-5;
+  font-size: t.$texto-xs;
+  color: t.$tinta-suave;
+  line-height: 1.6;
+  white-space: pre-line; // respeta los saltos que el usuario escribio
+  @include m.sin-cortar;
+}
+
+.pie {
+  margin-top: t.$e-6;
+  padding-top: t.$e-3;
+  border-top: 0.75pt solid t.$borde;
+  font-size: t.$texto-xs;
+  color: t.$tinta-tenue;
+  text-align: center;
+}
+
+.aviso-parcial {
+  margin-top: t.$e-3;
+  font-size: t.$texto-xs;
+  color: t.$alerta;
+  font-weight: t.$peso-medio;
+}

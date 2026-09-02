@@ -1,0 +1,371 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Calculadora</h1>
+    <p class="subtitulo">
+      Los cuatro bloques se recalculan con cada cambio. El precio de venta es el número que se mira.
+    </p>
+  </div>
+  <button type="button" class="boton boton--secundario" (click)="limpiar()">Limpiar</button>
+</header>
+
+@if (catalogo.cargando() && !catalogo.cargado()) {
+  <p class="vacio">Cargando insumos y equipos…</p>
+} @else {
+  <div class="bloques">
+    <!-- ============ BLOQUE 1: insumos ============ -->
+    <section class="tarjeta bloque">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">1 · Costos de los insumos</span>
+        <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarInsumo()">
+          + Agregar
+        </button>
+      </div>
+      <div class="tarjeta__cuerpo">
+        @if (filasInsumo().length === 0) {
+          <p class="vacio">Agregá los insumos que lleva una unidad.</p>
+        } @else {
+          <!-- Filas apiladas, no tabla: en una columna de 300px un <select> con
+               nombres largos queda reducido a una letra. -->
+          @for (fila of filasInsumo(); track $index; let i = $index) {
+            <div class="linea">
+              <div class="linea__principal">
+                <select
+                  class="control"
+                  [value]="fila.insumoId"
+                  (change)="cambiarInsumo(i, $any($event.target).value)"
+                >
+                  <option value="">Elegí un insumo…</option>
+                  @for (insumo of catalogo.insumos(); track insumo.id) {
+                    <option [value]="insumo.id">{{ insumo.nombre }}</option>
+                  }
+                </select>
+                <button
+                  type="button"
+                  class="boton boton--peligro boton--chico"
+                  (click)="quitarInsumo(i)"
+                  aria-label="Quitar insumo"
+                >
+                  ×
+                </button>
+              </div>
+              <div class="linea__detalle">
+                <input
+                  type="number"
+                  class="control control--numero linea__num"
+                  min="0"
+                  step="0.01"
+                  [value]="fila.cantidad"
+                  (input)="cambiarCantidad(i, +$any($event.target).value)"
+                />
+                <span class="unidad">{{ unidadDe(fila.insumoId) }}</span>
+                <span class="unidad">×</span>
+                @if (precioUnitarioDe(fila.insumoId); as p) {
+                  <span class="importe suave">{{ p | pesosM }}</span>
+                } @else {
+                  <span class="marca-vieja">sin precio</span>
+                }
+                <strong class="importe linea__costo">
+                  {{ costeo().lineasInsumo[i]?.costo | pesosM }}
+                </strong>
+              </div>
+            </div>
+          }
+        }
+
+        <div class="total-bloque">
+          <span>Costo de insumos</span>
+          <strong class="importe">{{ costeo().costoInsumos | pesosM }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BLOQUE 2: produccion ============ -->
+    <section class="tarjeta bloque">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">2 · Costo de producción</span>
+        <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarEquipo()">
+          + Equipo
+        </button>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <label class="campo">
+          <span class="etiqueta">Mano de obra (minutos por unidad)</span>
+          <input
+            type="number"
+            class="control control--numero"
+            min="0"
+            [ngModel]="minutosManoObra()"
+            (ngModelChange)="minutosManoObra.set($event || 0)"
+          />
+          <small class="tenue">
+            A {{ catalogo.costos().valorHoraManoObra | pesos }} la hora ·
+            <strong>{{ costeo().manoObra | pesosM }}</strong>
+          </small>
+        </label>
+
+        @for (fila of filasEquipo(); track $index; let i = $index) {
+          <div class="linea">
+            <div class="linea__principal">
+              <select
+                class="control"
+                [value]="fila.equipoId"
+                (change)="actualizarEquipo(i, { equipoId: $any($event.target).value })"
+              >
+                <option value="">Elegí un equipo…</option>
+                @for (equipo of catalogo.equipos(); track equipo.id) {
+                  <option [value]="equipo.id">{{ equipo.nombre }}</option>
+                }
+              </select>
+              <button
+                type="button"
+                class="boton boton--peligro boton--chico"
+                (click)="quitarEquipo(i)"
+                aria-label="Quitar equipo"
+              >
+                ×
+              </button>
+            </div>
+            <div class="linea__detalle">
+              <input
+                type="number"
+                class="control control--numero linea__num"
+                min="0"
+                step="1"
+                title="Usos de vida útil"
+                [value]="fila.unidadesConsumidas"
+                (input)="actualizarEquipo(i, { unidadesConsumidas: +$any($event.target).value })"
+              />
+              <span class="unidad">usos</span>
+              <input
+                type="number"
+                class="control control--numero linea__num"
+                min="0"
+                title="Minutos encendido"
+                [value]="fila.minutosUso"
+                (input)="actualizarEquipo(i, { minutosUso: +$any($event.target).value })"
+              />
+              <span class="unidad">min</span>
+              <strong class="importe linea__costo">
+                {{
+                  (costeo().lineasEquipo[i]?.amortizacion ?? 0) +
+                    (costeo().lineasEquipo[i]?.energia ?? 0) | pesosM
+                }}
+              </strong>
+            </div>
+          </div>
+        }
+
+        <label class="campo">
+          <span class="etiqueta">Otros gastos por unidad</span>
+          <input
+            type="text"
+            class="control control--numero"
+            inputmode="decimal"
+            placeholder="0,00"
+            [ngModel]="otrosGastosTexto()"
+            (ngModelChange)="otrosGastosTexto.set($event)"
+          />
+        </label>
+
+        <dl class="desglose">
+          <div><dt>Mano de obra</dt><dd class="importe">{{ costeo().manoObra | pesosM }}</dd></div>
+          <div><dt>Energía</dt><dd class="importe">{{ costeo().energia | pesosM }}</dd></div>
+          <div>
+            <dt>Amortizaciones</dt>
+            <dd class="importe">{{ costeo().amortizaciones | pesosM }}</dd>
+          </div>
+          <div><dt>Otros gastos</dt><dd class="importe">{{ costeo().otrosGastos | pesosM }}</dd></div>
+        </dl>
+
+        <div class="total-bloque">
+          <span>Costo de producción</span>
+          <strong class="importe">{{ costeo().costoProduccion | pesosM }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BLOQUE 3: precio y rentabilidad ============ -->
+    <section class="tarjeta bloque">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">3 · Precio y rentabilidad</span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <dl class="desglose">
+          <div><dt>Subtotal</dt><dd class="importe">{{ costeo().subtotalCosto | pesosM }}</dd></div>
+          <div>
+            <dt>Merma ({{ porcentajeMerma() | pct }})</dt>
+            <dd class="importe">{{ costeo().merma | pesosM }}</dd>
+          </div>
+        </dl>
+
+        <label class="campo">
+          <span class="etiqueta">Merma %</span>
+          <input
+            type="number"
+            class="control control--numero"
+            min="0"
+            max="100"
+            step="0.5"
+            [ngModel]="porcentajeMerma()"
+            (ngModelChange)="porcentajeMerma.set($event ?? 0)"
+          />
+        </label>
+
+        <div class="costo-total">
+          <span class="etiqueta">Costo total por unidad</span>
+          <strong class="importe costo-total__valor">
+            {{ costeo().costoTotalUnitario | pesosM }}
+          </strong>
+        </div>
+
+        <label class="campo">
+          <span class="etiqueta">Margen sobre el precio de venta</span>
+          <div class="deslizador">
+            <input
+              type="range"
+              min="0"
+              max="90"
+              step="1"
+              [ngModel]="margen()"
+              (ngModelChange)="margen.set($event)"
+            />
+            <input
+              type="number"
+              class="control control--numero deslizador__numero"
+              min="0"
+              max="99.99"
+              step="0.5"
+              [ngModel]="margen()"
+              (ngModelChange)="margen.set($event ?? 0)"
+            />
+          </div>
+        </label>
+
+        <!-- La aclaración que evita el error de confundir margen con recargo. -->
+        <div class="aviso aviso--info explicacion">
+          <div>
+            Con <strong>{{ margen() | pct }}</strong> de margen sobre venta, el recargo sobre el
+            costo es <strong>{{ recargoEquivalente() | pct }}</strong>.
+            <br />
+            El precio se <strong>divide</strong> por (1 − margen), no se multiplica:
+            <span class="importe">{{ costeo().precioSugerido | pesosM }}</span>
+            y no
+            <span class="importe tachado">{{ precioSiSeMultiplicara() | pesos }}</span
+            >.
+          </div>
+        </div>
+
+        <dl class="desglose">
+          <div>
+            <dt>Precio sugerido</dt>
+            <dd class="importe">{{ costeo().precioSugerido | pesosM }}</dd>
+          </div>
+          <div>
+            <dt>Ganancia por unidad</dt>
+            <dd class="importe exito">{{ costeo().gananciaUnitaria | pesosM }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ============ BLOQUE 4: cotizacion ============ -->
+    <section class="tarjeta bloque">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">4 · Cotización</span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <label class="campo">
+          <span class="etiqueta">Canal de venta</span>
+          <select
+            class="control"
+            [value]="comisionPlataforma()"
+            (change)="comisionPlataforma.set(+$any($event.target).value)"
+          >
+            @for (canal of canales; track canal.nombre) {
+              <option [value]="canal.comision">
+                {{ canal.nombre }}@if (canal.comision > 0) {
+                  &nbsp;— {{ canal.comision | pct }}
+                }
+              </option>
+            }
+          </select>
+          @if (comisionPlataforma() > 0) {
+            <small class="tenue">
+              La comisión también se divide: se cobra sobre el precio final.
+              La plataforma se lleva {{ costeo().montoComision | pesosM }}.
+            </small>
+          }
+        </label>
+
+        <!-- El número que se mira. -->
+        <div class="precio-final">
+          <span class="precio-final__etiqueta">Precio de venta</span>
+          <strong class="precio-final__valor">{{ costeo().precioVentaFinal | pesosM }}</strong>
+          <span class="precio-final__nota">por unidad</span>
+        </div>
+
+        @if (!costeo().completo) {
+          <div class="aviso aviso--alerta">
+            <div>
+              <strong>El total es parcial.</strong>
+              <ul class="lista-avisos">
+                @for (a of costeo().advertencias; track a.detalle) {
+                  <li>{{ a.detalle }}</li>
+                }
+              </ul>
+            </div>
+          </div>
+        }
+
+        <label class="campo">
+          <span class="etiqueta">Cantidad a cotizar</span>
+          <input
+            type="number"
+            class="control control--numero"
+            min="1"
+            step="1"
+            [ngModel]="cantidadCotizada()"
+            (ngModelChange)="cantidadCotizada.set($event || 1)"
+          />
+        </label>
+
+        <dl class="desglose">
+          <div>
+            <dt>Total por {{ cantidadCotizada() | cantidad }} u.</dt>
+            <dd class="importe">{{ totalCotizado() | pesos }}</dd>
+          </div>
+          <div>
+            <dt>Ganancia total</dt>
+            <dd class="importe exito">{{ gananciaTotal() | pesos }}</dd>
+          </div>
+        </dl>
+
+        <hr class="separador" />
+
+        <label class="campo">
+          <span class="etiqueta">Guardar esta receta como producto</span>
+          <input
+            type="text"
+            class="control"
+            placeholder="Ej: Taza mágica negra — full color"
+            [ngModel]="nombreProducto()"
+            (ngModelChange)="nombreProducto.set($event)"
+          />
+        </label>
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton boton--secundario"
+            [disabled]="!hayReceta() || guardando()"
+            (click)="guardarComoProducto()"
+          >
+            {{ guardando() ? 'Guardando…' : 'Guardar como producto' }}
+          </button>
+          <button type="button" class="boton boton--primario" (click)="irACotizar()">
+            Hacer presupuesto
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}

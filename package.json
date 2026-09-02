@@ -1,0 +1,30 @@
+{
+  "name": "calculadora-sublimacion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -b shared api && npm run build -w @calc/web",
+    "build:back": "tsc -b shared api",
+    "typecheck": "tsc -b shared api --force",
+    "api": "npm run build:back && node api/dist/index.js",
+    "web": "npm run build:back && npm start -w @calc/web",
+    "verificar": "npm run build:back && node scripts/verificar-planilla.mjs && node scripts/verificar-esquemas.mjs",
+    "verificar:api": "npm run build:back && node scripts/verificar-api.mjs",
+    "verificar:pdf": "npm run build:back && node scripts/verificar-pdf.mjs",
+    "verificar:todo": "npm run verificar && node scripts/verificar-api.mjs && node scripts/verificar-pdf.mjs && npm run build -w @calc/web",
+    "build:standalone": "npm run build:back && npm run build -w @calc/web",
+    "standalone": "npm run build:standalone && node api/dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}

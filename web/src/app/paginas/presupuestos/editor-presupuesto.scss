@@ -1,0 +1,123 @@
+@use 'tokens' as t;
+
+.editor {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: t.$p-4;
+  align-items: start;
+}
+
+.totales {
+  position: sticky;
+  top: t.$p-4;
+}
+
+.item {
+  padding: t.$p-3;
+  border: 1px solid t.$borde;
+  border-radius: t.$p-radio;
+  margin-bottom: t.$p-3;
+
+  &__fila {
+    display: flex;
+    gap: t.$p-3;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  &__producto {
+    flex: 2 1 220px;
+    margin-bottom: 0;
+  }
+
+  &__cantidad {
+    flex: 0 0 90px;
+    margin-bottom: 0;
+  }
+
+  &__precio {
+    flex: 1 1 140px;
+    margin-bottom: 0;
+  }
+
+  &__quitar {
+    margin-bottom: t.$p-2;
+  }
+
+  &__subtotal {
+    margin-top: t.$p-2;
+    text-align: right;
+    font-size: t.$p-texto-sm;
+    color: t.$tinta-suave;
+  }
+}
+
+.grilla-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: t.$p-3;
+}
+
+.desglose {
+  margin: 0 0 t.$p-3;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: t.$p-2;
+    padding: t.$p-1 0;
+    font-size: t.$p-texto-sm;
+  }
+
+  dt {
+    color: t.$tinta-suave;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: t.$peso-medio;
+  }
+
+  &__total {
+    border-top: 1px solid t.$borde;
+    margin-top: t.$p-2;
+    padding-top: t.$p-2;
+    font-size: t.$p-texto-md;
+
+    dt {
+      color: t.$tinta;
+      font-weight: t.$peso-fuerte;
+    }
+
+    dd {
+      color: t.$marca;
+      font-weight: t.$peso-fuerte;
+    }
+  }
+}
+
+.exito {
+  color: t.$exito;
+
+  dt,
+  dd {
+    color: inherit;
+  }
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: t.$p-2;
+  margin-top: t.$p-4;
+}
+
+@media (max-width: t.$quiebre-tablet) {
+  .editor {
+    grid-template-columns: 1fr;
+  }
+
+  .totales {
+    position: static;
+  }
+}

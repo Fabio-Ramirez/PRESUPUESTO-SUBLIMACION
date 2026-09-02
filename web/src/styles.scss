@@ -1,0 +1,424 @@
+// ---------------------------------------------------------------------------
+// Estilos globales.
+//
+// Los tokens vienen de /estilos, la misma carpeta que usa el PDF: el color de
+// marca y los colores de estado son literalmente los mismos valores, asi que un
+// presupuesto VENCIDO no puede ser naranja en la pantalla y rojo en el papel.
+// ---------------------------------------------------------------------------
+
+@use 'tokens' as t;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family: t.$fuente-base;
+  font-size: t.$p-texto-base;
+  line-height: 1.5;
+  color: t.$tinta;
+  background: t.$papel-alterno;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+// --- Tipografia utilitaria --------------------------------------------------
+
+.titulo-pagina {
+  font-size: t.$p-texto-lg;
+  font-weight: t.$peso-fuerte;
+  color: t.$tinta;
+}
+
+.subtitulo {
+  font-size: t.$p-texto-sm;
+  color: t.$tinta-suave;
+}
+
+.etiqueta {
+  display: block;
+  font-size: t.$p-texto-xs;
+  font-weight: t.$peso-medio;
+  color: t.$tinta-suave;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: t.$p-1;
+}
+
+/// Cifras tabulares para que las columnas de importes alineen por la coma.
+.importe {
+  font-family: t.$fuente-numeros;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.numerico {
+  text-align: right;
+}
+
+.tenue {
+  color: t.$tinta-tenue;
+}
+
+.suave {
+  color: t.$tinta-suave;
+}
+
+// --- Superficies ------------------------------------------------------------
+
+.tarjeta {
+  background: t.$papel;
+  border: 1px solid t.$borde;
+  border-radius: t.$p-radio;
+  box-shadow: t.$sombra-1;
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: t.$p-3;
+    padding: t.$p-3 t.$p-4;
+    border-bottom: 1px solid t.$borde;
+  }
+
+  &__titulo {
+    font-size: t.$p-texto-sm;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__cuerpo {
+    padding: t.$p-4;
+  }
+}
+
+// --- Formularios ------------------------------------------------------------
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.campo {
+  display: block;
+  margin-bottom: t.$p-3;
+
+  &--en-linea {
+    display: flex;
+    align-items: center;
+    gap: t.$p-2;
+  }
+}
+
+.control {
+  width: 100%;
+  padding: t.$p-2 t.$p-3;
+  border: 1px solid t.$borde;
+  border-radius: t.$p-radio;
+  background: t.$papel;
+  transition: border-color 0.12s, box-shadow 0.12s;
+
+  &:focus {
+    outline: none;
+    border-color: t.$marca;
+    box-shadow: 0 0 0 3px t.$marca-clara;
+  }
+
+  &:disabled {
+    background: t.$papel-alterno;
+    color: t.$tinta-tenue;
+  }
+
+  &--numero {
+    font-family: t.$fuente-numeros;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  &--invalido {
+    border-color: t.$error;
+  }
+}
+
+.error-campo {
+  display: block;
+  margin-top: t.$p-1;
+  font-size: t.$p-texto-xs;
+  color: t.$error;
+}
+
+// --- Botones ----------------------------------------------------------------
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: t.$p-2;
+  padding: t.$p-2 t.$p-4;
+  border: 1px solid transparent;
+  border-radius: t.$p-radio;
+  font-size: t.$p-texto-sm;
+  font-weight: t.$peso-medio;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primario {
+    background: t.$marca;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: t.$marca-oscura;
+    }
+  }
+
+  &--secundario {
+    background: t.$papel;
+    border-color: t.$borde;
+    color: t.$tinta;
+
+    &:hover:not(:disabled) {
+      border-color: t.$borde-fuerte;
+      background: t.$papel-alterno;
+    }
+  }
+
+  &--fantasma {
+    background: transparent;
+    color: t.$marca;
+
+    &:hover:not(:disabled) {
+      background: t.$marca-clara;
+    }
+  }
+
+  &--peligro {
+    background: t.$papel;
+    border-color: t.$borde;
+    color: t.$error;
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, t.$error 8%, transparent);
+    }
+  }
+
+  &--chico {
+    padding: t.$p-1 t.$p-2;
+    font-size: t.$p-texto-xs;
+  }
+}
+
+// --- Tablas -----------------------------------------------------------------
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: t.$p-texto-sm;
+
+  th {
+    text-align: left;
+    padding: t.$p-2 t.$p-3;
+    font-size: t.$p-texto-xs;
+    font-weight: t.$peso-medio;
+    color: t.$tinta-suave;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid t.$borde;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: t.$p-2 t.$p-3;
+    border-bottom: 1px solid t.$borde;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: t.$papel-alterno;
+  }
+
+  &__acciones {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+/// Contenedor de tabla ancha: scrollea el bloque, nunca la pagina.
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+// --- Estados ----------------------------------------------------------------
+
+.chip {
+  display: inline-block;
+  padding: 2px t.$p-2;
+  border-radius: 999px;
+  font-size: t.$p-texto-xs;
+  font-weight: t.$peso-fuerte;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid currentcolor;
+
+  // Una clase por estado, generada desde el mismo mapa que usa el sello del PDF.
+  @each $estado, $color in t.$estados {
+    &--#{$estado} {
+      color: $color;
+      background: color-mix(in srgb, $color 8%, transparent);
+    }
+  }
+}
+
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: t.$p-2;
+  padding: t.$p-3;
+  border-radius: t.$p-radio;
+  font-size: t.$p-texto-sm;
+  border: 1px solid;
+
+  &--alerta {
+    color: t.$alerta;
+    border-color: color-mix(in srgb, t.$alerta 35%, transparent);
+    background: color-mix(in srgb, t.$alerta 7%, transparent);
+  }
+
+  &--error {
+    color: t.$error;
+    border-color: color-mix(in srgb, t.$error 35%, transparent);
+    background: color-mix(in srgb, t.$error 7%, transparent);
+  }
+
+  &--info {
+    color: t.$marca-oscura;
+    border-color: color-mix(in srgb, t.$marca 30%, transparent);
+    background: t.$marca-clara;
+  }
+}
+
+.vacio {
+  padding: t.$p-7 t.$p-4;
+  text-align: center;
+  color: t.$tinta-tenue;
+  font-size: t.$p-texto-sm;
+}
+
+// --- Patrones de pagina -----------------------------------------------------
+//
+// Los comparten casi todas las pantallas. Van en el global y no en cada
+// componente: repetir la misma cabecera en ocho .scss termina en ocho cabeceras
+// levemente distintas.
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: t.$p-4;
+  margin-bottom: t.$p-4;
+  flex-wrap: wrap;
+
+  &__acciones {
+    display: flex;
+    gap: t.$p-2;
+    flex-wrap: wrap;
+  }
+}
+
+.filtros {
+  display: flex;
+  gap: t.$p-3;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: t.$p-4;
+
+  .control {
+    width: auto;
+    min-width: 200px;
+  }
+
+  .campo {
+    margin: 0;
+  }
+}
+
+.margen-abajo {
+  margin-bottom: t.$p-4;
+}
+
+/// Precio vencido o ausente: mismo color que el estado VENCIDO del PDF.
+.marca-vieja {
+  color: t.$alerta;
+  font-weight: t.$peso-medio;
+  font-size: t.$p-texto-sm;
+}
+
+// --- Modal ------------------------------------------------------------------
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: t.$p-4;
+  background: rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+
+  &__caja {
+    background: t.$papel;
+    border-radius: t.$p-radio-grande;
+    box-shadow: t.$sombra-3;
+    padding: t.$p-5;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    &--ancha {
+      max-width: 900px;
+    }
+  }
+
+  &__titulo {
+    font-size: t.$p-texto-md;
+    font-weight: t.$peso-fuerte;
+    margin-bottom: t.$p-3;
+  }
+
+  &__acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: t.$p-2;
+    margin-top: t.$p-5;
+    flex-wrap: wrap;
+  }
+}

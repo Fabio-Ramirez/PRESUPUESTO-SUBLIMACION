@@ -1,0 +1,356 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Productos</h1>
+    <p class="subtitulo">La receta de costeo de cada trabajo. Sin límite de cantidad.</p>
+  </div>
+  <button type="button" class="boton boton--primario" (click)="abrirNuevo()">
+    + Nuevo producto
+  </button>
+</header>
+
+<div class="filtros">
+  <input
+    type="search"
+    class="control"
+    placeholder="Buscar por nombre o categoría…"
+    [ngModel]="busqueda()"
+    (ngModelChange)="busqueda.set($event)"
+  />
+</div>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th class="numerico">Insumos</th>
+          <th class="numerico">Margen</th>
+          <th class="numerico">Comisión</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of filtrados(); track p.id) {
+          <tr>
+            <td><strong>{{ p.nombre }}</strong></td>
+            <td class="suave">{{ p.categoria }}</td>
+            <td class="numerico">{{ p.insumos.length }}</td>
+            <td class="numerico">{{ p.margen | pct }}</td>
+            <td class="numerico">
+              @if (p.comisionPlataforma > 0) {
+                {{ p.comisionPlataforma | pct }}
+              } @else {
+                <span class="tenue">—</span>
+              }
+            </td>
+            <td class="tabla__acciones">
+              <button
+                type="button"
+                class="boton boton--secundario boton--chico"
+                (click)="abrirEdicion(p)"
+              >
+                Editar
+              </button>
+              <button type="button" class="boton boton--peligro boton--chico" (click)="desactivar(p)">
+                Baja
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="vacio">
+              @if (cargando()) {
+                Cargando…
+              } @else {
+                Todavía no hay productos. Podés crear uno acá o guardar una receta desde la
+                Calculadora.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (mostrandoForm()) {
+  <div class="modal" (click)="mostrandoForm.set(false)">
+    <div class="modal__caja modal__caja--ancha" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">{{ editandoId() ? 'Editar producto' : 'Nuevo producto' }}</h2>
+
+      <div class="editor">
+        <!-- ===== Receta ===== -->
+        <div class="editor__receta">
+          <label class="campo">
+            <span class="etiqueta">Nombre</span>
+            <input
+              type="text"
+              class="control"
+              placeholder="Ej: Taza mágica negra — sublimación full color"
+              [ngModel]="borrador().nombre"
+              (ngModelChange)="editar({ nombre: $event })"
+            />
+          </label>
+
+          <label class="campo">
+            <span class="etiqueta">Categoría</span>
+            <input
+              type="text"
+              class="control"
+              [ngModel]="borrador().categoria"
+              (ngModelChange)="editar({ categoria: $event })"
+            />
+          </label>
+
+          <div class="seccion-titulo">
+            <span class="etiqueta">Insumos por unidad</span>
+            <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarInsumo()">
+              + Agregar
+            </button>
+          </div>
+
+          @for (fila of borrador().insumos; track $index; let i = $index) {
+            <div class="fila-editable">
+              <select
+                class="control"
+                [value]="fila.insumoId"
+                (change)="cambiarInsumo(i, { insumoId: $any($event.target).value })"
+              >
+                <option value="">Elegí…</option>
+                @for (insumo of catalogo.insumos(); track insumo.id) {
+                  <option [value]="insumo.id">{{ insumo.nombre }}</option>
+                }
+              </select>
+              <input
+                type="number"
+                class="control control--numero fila-editable__num"
+                min="0"
+                step="0.01"
+                [value]="fila.cantidad"
+                (input)="cambiarInsumo(i, { cantidad: +$any($event.target).value })"
+              />
+              <span class="unidad">{{ unidadDe(fila.insumoId) }}</span>
+              <span class="importe suave">{{ costeo().lineasInsumo[i]?.costo | pesosM }}</span>
+              <button type="button" class="boton boton--peligro boton--chico" (click)="quitarInsumo(i)">
+                ×
+              </button>
+            </div>
+          }
+
+          <div class="seccion-titulo">
+            <span class="etiqueta">Equipos</span>
+            <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarEquipo()">
+              + Agregar
+            </button>
+          </div>
+
+          @for (fila of borrador().equipos; track $index; let i = $index) {
+            <div class="fila-editable">
+              <select
+                class="control"
+                [value]="fila.equipoId"
+                (change)="cambiarEquipo(i, { equipoId: $any($event.target).value })"
+              >
+                <option value="">Elegí…</option>
+                @for (equipo of catalogo.equipos(); track equipo.id) {
+                  <option [value]="equipo.id">{{ equipo.nombre }}</option>
+                }
+              </select>
+              <input
+                type="number"
+                class="control control--numero fila-editable__num"
+                min="0"
+                step="1"
+                title="Usos de vida útil"
+                [value]="fila.unidadesConsumidas"
+                (input)="cambiarEquipo(i, { unidadesConsumidas: +$any($event.target).value })"
+              />
+              <input
+                type="number"
+                class="control control--numero fila-editable__num"
+                min="0"
+                title="Minutos encendido"
+                [value]="fila.minutosUso"
+                (input)="cambiarEquipo(i, { minutosUso: +$any($event.target).value })"
+              />
+              <span class="unidad">min</span>
+              <button type="button" class="boton boton--peligro boton--chico" (click)="quitarEquipo(i)">
+                ×
+              </button>
+            </div>
+          }
+
+          <div class="grilla-2">
+            <label class="campo">
+              <span class="etiqueta">Mano de obra (min)</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="0"
+                [ngModel]="borrador().minutosManoObra"
+                (ngModelChange)="editar({ minutosManoObra: $event || 0 })"
+              />
+            </label>
+            <label class="campo">
+              <span class="etiqueta">Otros gastos</span>
+              <input
+                type="text"
+                class="control control--numero"
+                inputmode="decimal"
+                placeholder="0,00"
+                [ngModel]="borrador().otrosGastosTexto"
+                (ngModelChange)="editar({ otrosGastosTexto: $event })"
+              />
+            </label>
+            <label class="campo">
+              <span class="etiqueta">Merma %</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="0"
+                max="100"
+                step="0.5"
+                [ngModel]="borrador().porcentajeMerma"
+                (ngModelChange)="editar({ porcentajeMerma: $event ?? 0 })"
+              />
+            </label>
+            <label class="campo">
+              <span class="etiqueta">Margen % (sobre venta)</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="0"
+                max="99.99"
+                step="0.5"
+                [ngModel]="borrador().margen"
+                (ngModelChange)="editar({ margen: $event ?? 0 })"
+              />
+            </label>
+            <label class="campo">
+              <span class="etiqueta">Comisión por defecto %</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="0"
+                max="99.99"
+                step="0.1"
+                [ngModel]="borrador().comisionPlataforma"
+                (ngModelChange)="editar({ comisionPlataforma: $event ?? 0 })"
+              />
+              <small class="tenue">Se puede pisar por canal al cotizar.</small>
+            </label>
+          </div>
+
+          <div class="seccion-titulo">
+            <span class="etiqueta">Descuentos por cantidad</span>
+            <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarTramo()">
+              + Tramo
+            </button>
+          </div>
+
+          @for (tramo of borrador().tramosDescuento; track $index; let i = $index) {
+            <div class="fila-editable">
+              <span class="suave">Desde</span>
+              <input
+                type="number"
+                class="control control--numero fila-editable__num"
+                min="1"
+                [value]="tramo.desdeCantidad"
+                (input)="cambiarTramo(i, { desdeCantidad: +$any($event.target).value })"
+              />
+              <span class="suave">unidades:</span>
+              <input
+                type="number"
+                class="control control--numero fila-editable__num"
+                min="0"
+                max="100"
+                step="0.5"
+                [value]="tramo.porcentaje"
+                (input)="cambiarTramo(i, { porcentaje: +$any($event.target).value })"
+              />
+              <span class="unidad">%</span>
+              <button type="button" class="boton boton--peligro boton--chico" (click)="quitarTramo(i)">
+                ×
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- ===== Desglose en vivo ===== -->
+        <aside class="editor__desglose">
+          <span class="tarjeta__titulo">Costeo</span>
+
+          <dl class="desglose">
+            <div><dt>Insumos</dt><dd class="importe">{{ costeo().costoInsumos | pesosM }}</dd></div>
+            <div><dt>Mano de obra</dt><dd class="importe">{{ costeo().manoObra | pesosM }}</dd></div>
+            <div><dt>Energía</dt><dd class="importe">{{ costeo().energia | pesosM }}</dd></div>
+            <div>
+              <dt>Amortizaciones</dt>
+              <dd class="importe">{{ costeo().amortizaciones | pesosM }}</dd>
+            </div>
+            <div><dt>Otros</dt><dd class="importe">{{ costeo().otrosGastos | pesosM }}</dd></div>
+            <div class="desglose__total">
+              <dt>Subtotal</dt>
+              <dd class="importe">{{ costeo().subtotalCosto | pesosM }}</dd>
+            </div>
+            <div>
+              <dt>Merma {{ borrador().porcentajeMerma | pct }}</dt>
+              <dd class="importe">{{ costeo().merma | pesosM }}</dd>
+            </div>
+            <div class="desglose__total">
+              <dt>Costo por unidad</dt>
+              <dd class="importe">{{ costeo().costoTotalUnitario | pesosM }}</dd>
+            </div>
+          </dl>
+
+          <div class="precio-caja">
+            <span class="etiqueta">Precio sugerido</span>
+            <strong class="importe precio-caja__valor">{{ costeo().precioSugerido | pesosM }}</strong>
+            <small class="tenue">
+              Margen {{ borrador().margen | pct }} sobre venta = recargo
+              {{ costeo().recargoSobreCosto | pct }} sobre costo
+            </small>
+          </div>
+
+          @if (borrador().comisionPlataforma > 0) {
+            <div class="precio-caja precio-caja--final">
+              <span class="etiqueta">Precio de venta con comisión</span>
+              <strong class="importe precio-caja__valor">
+                {{ costeo().precioVentaFinal | pesosM }}
+              </strong>
+            </div>
+          }
+
+          @if (!costeo().completo) {
+            <div class="aviso aviso--alerta">
+              <div>
+                <strong>Costeo parcial.</strong>
+                <ul class="lista-avisos">
+                  @for (a of costeo().advertencias; track a.detalle) {
+                    <li>{{ a.detalle }}</li>
+                  }
+                </ul>
+              </div>
+            </div>
+          }
+        </aside>
+      </div>
+
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="mostrandoForm.set(false)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="!borrador().nombre.trim() || guardando()"
+          (click)="guardar()"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+}

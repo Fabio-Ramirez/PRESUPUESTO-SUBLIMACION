@@ -1,0 +1,224 @@
+@use 'tokens' as t;
+
+:host {
+  display: block;
+}
+
+$lateral-ancho: 220px;
+
+.capa {
+  min-height: 100vh;
+}
+
+// --- Barra superior (solo mobile) -------------------------------------------
+
+.barra {
+  display: none;
+  align-items: center;
+  gap: t.$p-3;
+  padding: t.$p-2 t.$p-3;
+  background: t.$papel;
+  border-bottom: 1px solid t.$borde;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+
+  &__menu {
+    border: 1px solid t.$borde;
+    background: t.$papel;
+    border-radius: t.$p-radio;
+    padding: t.$p-1 t.$p-3;
+    cursor: pointer;
+  }
+
+  &__titulo {
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+  }
+}
+
+// --- Menu lateral -----------------------------------------------------------
+
+.lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: $lateral-ancho;
+  padding: t.$p-4 t.$p-3;
+  background: t.$papel;
+  border-right: 1px solid t.$borde;
+  overflow-y: auto;
+  z-index: 20;
+
+  &__marca {
+    padding: 0 t.$p-2 t.$p-5;
+  }
+
+  &__marca-nombre {
+    display: block;
+    font-size: t.$p-texto-md;
+    font-weight: t.$peso-fuerte;
+    color: t.$marca;
+    line-height: 1.2;
+  }
+
+  &__marca-bajada {
+    font-size: t.$p-texto-xs;
+    color: t.$tinta-tenue;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__grupo {
+    list-style: none;
+    margin: 0 0 t.$p-4;
+    padding: 0;
+
+    // Separador entre operatoria diaria, datos y ajustes.
+    + .lateral__grupo {
+      padding-top: t.$p-4;
+      border-top: 1px solid t.$borde;
+    }
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: t.$p-3;
+    padding: t.$p-2 t.$p-3;
+    border-radius: t.$p-radio;
+    color: t.$tinta-suave;
+    text-decoration: none;
+    font-size: t.$p-texto-sm;
+
+    &:hover {
+      background: t.$papel-alterno;
+      color: t.$tinta;
+    }
+
+    &--activo {
+      background: t.$marca-clara;
+      color: t.$marca-oscura;
+      font-weight: t.$peso-medio;
+    }
+  }
+
+  &__icono {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  &__globo {
+    margin-left: auto;
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: t.$alerta;
+    color: #fff;
+    font-size: t.$p-texto-xs;
+    font-weight: t.$peso-fuerte;
+    text-align: center;
+  }
+}
+
+.velo {
+  display: none;
+}
+
+// --- Contenido --------------------------------------------------------------
+
+.contenido {
+  margin-left: $lateral-ancho;
+  padding: t.$p-5;
+  max-width: 1500px;
+}
+
+// --- Avisos -----------------------------------------------------------------
+
+.avisos {
+  position: fixed;
+  right: t.$p-4;
+  bottom: t.$p-4;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: t.$p-2;
+  max-width: min(420px, calc(100vw - #{t.$p-5}));
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: t.$p-3;
+    padding: t.$p-3;
+    border-radius: t.$p-radio;
+    box-shadow: t.$sombra-3;
+    background: t.$papel;
+    border-left: 4px solid;
+    font-size: t.$p-texto-sm;
+
+    &--exito {
+      border-color: t.$exito;
+    }
+    &--error {
+      border-color: t.$error;
+    }
+    &--info {
+      border-color: t.$marca;
+    }
+  }
+
+  &__texto {
+    flex: 1;
+  }
+
+  &__detalles {
+    margin: t.$p-1 0 0;
+    padding-left: t.$p-4;
+    color: t.$tinta-suave;
+    font-size: t.$p-texto-xs;
+  }
+
+  &__cerrar {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: t.$tinta-tenue;
+    padding: 0 t.$p-1;
+  }
+}
+
+// --- Mobile -----------------------------------------------------------------
+
+@media (max-width: t.$quiebre-tablet) {
+  .barra {
+    display: flex;
+  }
+
+  .lateral {
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+    box-shadow: t.$sombra-3;
+  }
+
+  .contenido {
+    margin-left: 0;
+    padding: t.$p-4 t.$p-3;
+  }
+
+  .capa--menu-abierto {
+    .lateral {
+      transform: none;
+    }
+
+    .velo {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 15;
+    }
+  }
+}

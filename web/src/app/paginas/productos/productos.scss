@@ -1,0 +1,124 @@
+@use 'tokens' as t;
+
+/// Receta a la izquierda, costeo a la derecha: el desglose tiene que estar a la
+/// vista mientras se edita, no en otra pantalla.
+.editor {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: t.$p-5;
+  align-items: start;
+
+  &__desglose {
+    position: sticky;
+    top: 0;
+    padding: t.$p-3;
+    background: t.$papel-alterno;
+    border-radius: t.$p-radio;
+  }
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: t.$p-4 0 t.$p-2;
+
+  .etiqueta {
+    margin: 0;
+  }
+}
+
+.fila-editable {
+  display: flex;
+  align-items: center;
+  gap: t.$p-2;
+  margin-bottom: t.$p-2;
+
+  .control {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__num {
+    flex: 0 0 80px;
+  }
+}
+
+.unidad {
+  font-size: t.$p-texto-xs;
+  color: t.$tinta-tenue;
+  white-space: nowrap;
+}
+
+.grilla-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: t.$p-3;
+  margin-top: t.$p-4;
+}
+
+.desglose {
+  margin: t.$p-3 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: t.$p-2;
+    padding: 2px 0;
+    font-size: t.$p-texto-xs;
+  }
+
+  dt {
+    color: t.$tinta-suave;
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  &__total {
+    border-top: 1px solid t.$borde;
+    margin-top: t.$p-1;
+    padding-top: t.$p-2;
+    font-weight: t.$peso-medio;
+
+    dt {
+      color: t.$tinta;
+    }
+  }
+}
+
+.precio-caja {
+  margin-top: t.$p-3;
+  padding: t.$p-3;
+  background: t.$papel;
+  border: 1px solid t.$borde;
+  border-radius: t.$p-radio;
+
+  &__valor {
+    display: block;
+    font-size: t.$p-texto-md;
+    color: t.$marca;
+    margin-bottom: t.$p-1;
+  }
+
+  &--final &__valor {
+    color: t.$exito;
+  }
+}
+
+.lista-avisos {
+  margin: t.$p-1 0 0;
+  padding-left: t.$p-4;
+  font-size: t.$p-texto-xs;
+}
+
+@media (max-width: t.$quiebre-tablet) {
+  .editor {
+    grid-template-columns: 1fr;
+
+    &__desglose {
+      position: static;
+    }
+  }
+}

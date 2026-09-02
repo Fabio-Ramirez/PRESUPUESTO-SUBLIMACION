@@ -1,0 +1,144 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Presupuestos</h1>
+    <p class="subtitulo">
+      Los emitidos congelan sus números. Para recotizar se duplica con precios actuales.
+    </p>
+  </div>
+  <a routerLink="/presupuestos/nuevo" class="boton boton--primario">+ Nuevo presupuesto</a>
+</header>
+
+<div class="tarjetas-resumen">
+  @for (estado of estados; track estado) {
+    @if (resumen()[estado]; as r) {
+      <button
+        type="button"
+        class="resumen"
+        [class.resumen--activo]="filtroEstado() === estado"
+        (click)="filtrar(filtroEstado() === estado ? '' : estado)"
+      >
+        <span class="chip chip--{{ estado }}">{{ etiquetasEstado[estado] }}</span>
+        <strong class="resumen__cantidad">{{ r.cantidad }}</strong>
+        <span class="importe tenue">{{ r.total | pesos }}</span>
+      </button>
+    }
+  }
+</div>
+
+<div class="filtros">
+  <input
+    type="search"
+    class="control"
+    placeholder="Buscar por número o cliente…"
+    [ngModel]="busqueda()"
+    (ngModelChange)="busqueda.set($event)"
+    (keyup.enter)="recargar()"
+  />
+  <button type="button" class="boton boton--secundario" (click)="recargar()">Buscar</button>
+  @if (filtroEstado()) {
+    <button type="button" class="boton boton--fantasma" (click)="filtrar('')">
+      Quitar filtro: {{ etiquetaDe(filtroEstado()) }}
+    </button>
+  }
+</div>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+          <th>Válido hasta</th>
+          <th class="numerico">Total</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of lista(); track p.id) {
+          <tr>
+            <td>
+              <a [routerLink]="['/presupuestos', p.id]" class="enlace-numero">
+                {{ p.numero ?? 'sin emitir' }}
+              </a>
+            </td>
+            <td>{{ p.cliente.nombreRazonSocial }}</td>
+            <td class="suave">{{ p.fecha | fecha }}</td>
+            <td class="suave">{{ p.validoHasta | fecha }}</td>
+            <td class="numerico importe">{{ p.total | pesos }}</td>
+            <td>
+              <span class="chip chip--{{ p.estadoEfectivo }}">
+                {{ etiquetasEstado[p.estadoEfectivo] }}
+              </span>
+            </td>
+            <td class="tabla__acciones">
+              @if (esBorrador(p)) {
+                <button
+                  type="button"
+                  class="boton boton--primario boton--chico"
+                  (click)="emitir(p)"
+                >
+                  Emitir
+                </button>
+                <button
+                  type="button"
+                  class="boton boton--peligro boton--chico"
+                  (click)="eliminar(p)"
+                >
+                  Borrar
+                </button>
+              } @else {
+                <a
+                  class="boton boton--secundario boton--chico"
+                  [href]="urlPdf(p.id)"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  PDF
+                </a>
+              }
+              @if (admiteRespuesta(p)) {
+                <button
+                  type="button"
+                  class="boton boton--fantasma boton--chico"
+                  (click)="cambiarEstado(p, Estado.ACEPTADO)"
+                >
+                  Aceptado
+                </button>
+                <button
+                  type="button"
+                  class="boton boton--fantasma boton--chico"
+                  (click)="cambiarEstado(p, Estado.RECHAZADO)"
+                >
+                  Rechazado
+                </button>
+              }
+              @if (!esBorrador(p)) {
+                <button
+                  type="button"
+                  class="boton boton--secundario boton--chico"
+                  title="Crea un borrador nuevo con los precios de hoy"
+                  (click)="duplicar(p)"
+                >
+                  Duplicar
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="vacio">
+              @if (cargando()) {
+                Cargando…
+              } @else {
+                No hay presupuestos que coincidan.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

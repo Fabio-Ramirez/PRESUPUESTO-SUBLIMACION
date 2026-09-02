@@ -1,0 +1,230 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Nuevo presupuesto</h1>
+    <p class="subtitulo">
+      Se guarda como borrador, sin número. El número se asigna al emitir, así los borradores
+      descartados no dejan huecos.
+    </p>
+  </div>
+  <a routerLink="/presupuestos" class="boton boton--secundario">Volver</a>
+</header>
+
+@if (cargando()) {
+  <p class="vacio">Cargando clientes y productos…</p>
+} @else {
+  <div class="editor">
+    <div>
+      <section class="tarjeta margen-abajo">
+        <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Cliente</span></div>
+        <div class="tarjeta__cuerpo">
+          <label class="campo">
+            <span class="etiqueta">Cliente</span>
+            <select class="control" [ngModel]="clienteId()" (ngModelChange)="clienteId.set($event)">
+              <option value="">Elegí un cliente…</option>
+              @for (c of clientes(); track c.id) {
+                <option [value]="c.id">
+                  {{ c.nombreRazonSocial }}@if (c.cuitDni) { — {{ c.cuitDni }} }
+                </option>
+              }
+            </select>
+            @if (clientes().length === 0) {
+              <small class="tenue">
+                No hay clientes cargados. <a routerLink="/clientes">Cargá uno primero →</a>
+              </small>
+            }
+          </label>
+        </div>
+      </section>
+
+      <section class="tarjeta margen-abajo">
+        <div class="tarjeta__cabecera">
+          <span class="tarjeta__titulo">Trabajo</span>
+          <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarItem()">
+            + Ítem
+          </button>
+        </div>
+        <div class="tarjeta__cuerpo">
+          @for (fila of items(); track $index; let i = $index) {
+            <div class="item">
+              <div class="item__fila">
+                <label class="campo item__producto">
+                  <span class="etiqueta">Producto</span>
+                  <select
+                    class="control"
+                    [value]="fila.productoId"
+                    (change)="elegirProducto(i, $any($event.target).value)"
+                  >
+                    <option value="">Ítem libre (sin producto)</option>
+                    @for (p of productos(); track p.id) {
+                      <option [value]="p.id">{{ p.nombre }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="campo item__cantidad">
+                  <span class="etiqueta">Cantidad</span>
+                  <input
+                    type="number"
+                    class="control control--numero"
+                    min="1"
+                    step="1"
+                    [value]="fila.cantidad"
+                    (input)="editarItem(i, { cantidad: +$any($event.target).value || 1 })"
+                  />
+                </label>
+
+                <label class="campo item__precio">
+                  <span class="etiqueta">Precio unitario</span>
+                  <input
+                    type="text"
+                    class="control control--numero"
+                    inputmode="decimal"
+                    [placeholder]="precioSugeridoTexto(fila) || '0,00'"
+                    [value]="fila.precioTexto"
+                    (input)="editarItem(i, { precioTexto: $any($event.target).value })"
+                  />
+                  @if (fila.productoId && !fila.precioTexto) {
+                    <small class="tenue">Calculado por el motor de costeo.</small>
+                  }
+                </label>
+
+                <button
+                  type="button"
+                  class="boton boton--peligro boton--chico item__quitar"
+                  (click)="quitarItem(i)"
+                  aria-label="Quitar ítem"
+                >
+                  ×
+                </button>
+              </div>
+
+              <label class="campo">
+                <span class="etiqueta">Descripción (la que ve el cliente)</span>
+                <input
+                  type="text"
+                  class="control"
+                  placeholder="Ej: Taza mágica negra — sublimación full color"
+                  [value]="fila.descripcion"
+                  (input)="editarItem(i, { descripcion: $any($event.target).value })"
+                />
+              </label>
+
+              <div class="item__subtotal">
+                Subtotal: <strong class="importe">{{ subtotalDe(fila) | pesos }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="tarjeta">
+        <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Condiciones</span></div>
+        <div class="tarjeta__cuerpo">
+          <div class="grilla-2">
+            <label class="campo">
+              <span class="etiqueta">Validez (días)</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="1"
+                [ngModel]="validezDias()"
+                (ngModelChange)="validezDias.set($event || 1)"
+              />
+            </label>
+            <label class="campo">
+              <span class="etiqueta">Seña %</span>
+              <input
+                type="number"
+                class="control control--numero"
+                min="0"
+                max="100"
+                [ngModel]="porcentajeSenia()"
+                (ngModelChange)="porcentajeSenia.set($event ?? 0)"
+              />
+            </label>
+          </div>
+
+          <label class="campo campo--en-linea">
+            <input
+              type="checkbox"
+              [ngModel]="sinDescuento()"
+              (ngModelChange)="sinDescuento.set($event)"
+            />
+            <span>No aplicar el descuento automático por cantidad</span>
+          </label>
+
+          <label class="campo">
+            <span class="etiqueta">Condiciones generales (van al pie del PDF)</span>
+            <textarea
+              class="control"
+              rows="5"
+              [ngModel]="condiciones()"
+              (ngModelChange)="condiciones.set($event)"
+            ></textarea>
+          </label>
+
+          <label class="campo">
+            <span class="etiqueta">Notas internas (no salen en el PDF)</span>
+            <textarea
+              class="control"
+              rows="2"
+              [ngModel]="notasInternas()"
+              (ngModelChange)="notasInternas.set($event)"
+            ></textarea>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== Totales ===== -->
+    <aside class="totales tarjeta">
+      <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Totales</span></div>
+      <div class="tarjeta__cuerpo">
+        <dl class="desglose">
+          <div><dt>Subtotal</dt><dd class="importe">{{ subtotal() | pesos }}</dd></div>
+          @if (descuentoEstimado() > 0) {
+            <div class="exito">
+              <dt>Descuento por cantidad</dt>
+              <dd class="importe">− {{ descuentoEstimado() | pesos }}</dd>
+            </div>
+          }
+          <div class="desglose__total">
+            <dt>Total</dt>
+            <dd class="importe">{{ total() | pesos }}</dd>
+          </div>
+          <div>
+            <dt>Seña {{ porcentajeSenia() | pct }}</dt>
+            <dd class="importe">{{ montoSenia() | pesos }}</dd>
+          </div>
+          <div>
+            <dt>Saldo contra entrega</dt>
+            <dd class="importe">{{ total() - montoSenia() | pesos }}</dd>
+          </div>
+        </dl>
+
+        <p class="subtitulo">
+          El IVA lo resuelve el servidor según la condición configurada en la empresa.
+        </p>
+
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton boton--secundario"
+            [disabled]="!puedeGuardar() || guardando()"
+            (click)="guardar(false)"
+          >
+            Guardar borrador
+          </button>
+          <button
+            type="button"
+            class="boton boton--primario"
+            [disabled]="!puedeGuardar() || guardando()"
+            (click)="guardar(true)"
+          >
+            Guardar y emitir
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+}

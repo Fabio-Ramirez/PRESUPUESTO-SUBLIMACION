@@ -1,0 +1,34 @@
+# Dependencias e instalaciones
+node_modules/
+
+# Builds (shared/dist, api/dist, web/dist/web, y cualquier otro)
+dist/
+.angular/
+*.tsbuildinfo
+
+# Variables de entorno: MONGO_URI, PORT, CORS_ORIGIN, etc. nunca se versionan,
+# ni siquiera con valores de ejemplo — si algun dia se agrega un .env real con
+# datos de un servidor de verdad, este patron ya lo cubre. Un .env.example sin
+# valores reales SI se puede versionar, por eso la excepcion de abajo.
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Salidas de los scripts de verificacion: PDFs, HTML y capturas con datos de
+# prueba ficticios (ver scripts/verificar-*.mjs). Se regeneran solos.
+scripts/salida/
+
+# Paquetes armados para transferir el proyecto a otra maquina (ver README).
+# Se reconstruyen con `npm run build:standalone`, no hace falta versionarlos.
+*.zip
+_staging_transferir/
+
+# Editor / SO. Se ignora solo en la raiz: web/.vscode/ es el que genera el CLI
+# de Angular (recomendaciones de extensiones, debug config), no tiene datos
+# personales y se deja versionado a proposito.
+/.vscode/
+Thumbs.db
+.DS_Store

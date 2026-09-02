@@ -1,0 +1,239 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Configuración</h1>
+    <p class="subtitulo">
+      Datos del emisor, costos operativos y valores por defecto de los presupuestos.
+    </p>
+  </div>
+  <button
+    type="button"
+    class="boton boton--primario"
+    [disabled]="guardando() || cargando()"
+    (click)="guardar()"
+  >
+    {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+  </button>
+</header>
+
+@if (cargando()) {
+  <p class="vacio">Cargando…</p>
+} @else {
+  <div class="secciones">
+    <!-- ===== Empresa ===== -->
+    <section class="tarjeta">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">Datos del emisor</span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <p class="subtitulo margen-abajo">Es lo que sale en el encabezado del PDF.</p>
+
+        <label class="campo">
+          <span class="etiqueta">Nombre o razón social</span>
+          <input type="text" class="control" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" />
+        </label>
+
+        <div class="grilla">
+          <label class="campo">
+            <span class="etiqueta">CUIT</span>
+            <input type="text" class="control" [ngModel]="cuit()" (ngModelChange)="cuit.set($event)" />
+          </label>
+          <label class="campo">
+            <span class="etiqueta">WhatsApp</span>
+            <input
+              type="tel"
+              class="control"
+              placeholder="+54 9 351 555-1234"
+              [ngModel]="whatsapp()"
+              (ngModelChange)="whatsapp.set($event)"
+            />
+          </label>
+          <label class="campo">
+            <span class="etiqueta">Dirección</span>
+            <input
+              type="text"
+              class="control"
+              [ngModel]="direccion()"
+              (ngModelChange)="direccion.set($event)"
+            />
+          </label>
+          <label class="campo">
+            <span class="etiqueta">Email</span>
+            <input type="email" class="control" [ngModel]="email()" (ngModelChange)="email.set($event)" />
+          </label>
+        </div>
+
+        <label class="campo">
+          <span class="etiqueta">Condición frente al IVA</span>
+          <select class="control" [ngModel]="condicionIva()" (ngModelChange)="condicionIva.set($event)">
+            @for (c of condiciones; track c) {
+              <option [value]="c">{{ etiquetasIva[c] }}</option>
+            }
+          </select>
+          <small class="tenue">
+            Define si el PDF discrimina IVA. Monotributo y exento no lo muestran.
+          </small>
+        </label>
+
+        <div class="campo">
+          <span class="etiqueta">Logo</span>
+          @if (logo(); as l) {
+            <div class="logo-previa">
+              <img [src]="l" alt="Logo actual" />
+              <button type="button" class="boton boton--peligro boton--chico" (click)="logo.set(null)">
+                Quitar
+              </button>
+            </div>
+          }
+          <input type="file" class="control" accept="image/*" (change)="elegirLogo($event)" />
+          <small class="tenue">
+            Se guarda embebido en la configuración, así el PDF no depende de ningún archivo externo.
+            Máximo 400 KB.
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Costos operativos ===== -->
+    <section class="tarjeta">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">Costos operativos</span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <p class="subtitulo margen-abajo">
+          Con esto se calculan la mano de obra y la energía de cada producto.
+        </p>
+
+        <label class="campo">
+          <span class="etiqueta">Valor de la hora de mano de obra</span>
+          <input
+            type="text"
+            class="control control--numero"
+            inputmode="decimal"
+            placeholder="8000,00"
+            [ngModel]="valorHoraTexto()"
+            (ngModelChange)="valorHoraTexto.set($event)"
+          />
+        </label>
+
+        <label class="campo">
+          <span class="etiqueta">Costo del kWh</span>
+          <input
+            type="text"
+            class="control control--numero"
+            inputmode="decimal"
+            placeholder="120,00"
+            [ngModel]="costoKwhTexto()"
+            (ngModelChange)="costoKwhTexto.set($event)"
+          />
+          <small class="tenue">
+            Se combina con los watts de cada equipo y sus minutos de uso.
+          </small>
+        </label>
+      </div>
+    </section>
+
+    <!-- ===== Presupuestos ===== -->
+    <section class="tarjeta">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">Presupuestos</span>
+      </div>
+      <div class="tarjeta__cuerpo">
+        <div class="grilla">
+          <label class="campo">
+            <span class="etiqueta">Validez por defecto (días)</span>
+            <input
+              type="number"
+              class="control control--numero"
+              min="1"
+              [ngModel]="validezDias()"
+              (ngModelChange)="validezDias.set($event || 1)"
+            />
+          </label>
+          <label class="campo">
+            <span class="etiqueta">Seña por defecto %</span>
+            <input
+              type="number"
+              class="control control--numero"
+              min="0"
+              max="100"
+              [ngModel]="porcentajeSenia()"
+              (ngModelChange)="porcentajeSenia.set($event ?? 0)"
+            />
+          </label>
+          <label class="campo">
+            <span class="etiqueta">Punto de venta</span>
+            <input
+              type="number"
+              class="control control--numero"
+              min="0"
+              [ngModel]="puntoVenta()"
+              (ngModelChange)="puntoVenta.set($event ?? 0)"
+            />
+          </label>
+        </div>
+
+        <div class="aviso aviso--info margen-abajo">
+          <div>
+            El próximo presupuesto que emitas va a ser el
+            <strong class="importe">{{ numeroEjemplo() }}</strong>.
+            <br />
+            <small>
+              La numeración la lleva el servidor y es correlativa. No se edita a mano: por eso no
+              quedan huecos.
+            </small>
+          </div>
+        </div>
+
+        <div class="seccion-titulo">
+          <span class="etiqueta">Descuentos por cantidad (por defecto)</span>
+          <button type="button" class="boton boton--fantasma boton--chico" (click)="agregarTramo()">
+            + Tramo
+          </button>
+        </div>
+        <p class="subtitulo margen-abajo">
+          Se aplican cuando el producto no tiene tramos propios. Siempre se pueden editar a mano en
+          cada presupuesto.
+        </p>
+
+        @for (tramo of tramos(); track $index; let i = $index) {
+          <div class="fila-tramo">
+            <span class="suave">Desde</span>
+            <input
+              type="number"
+              class="control control--numero"
+              min="1"
+              [value]="tramo.desdeCantidad"
+              (input)="cambiarTramo(i, { desdeCantidad: +$any($event.target).value })"
+            />
+            <span class="suave">unidades:</span>
+            <input
+              type="number"
+              class="control control--numero"
+              min="0"
+              max="100"
+              step="0.5"
+              [value]="tramo.porcentaje"
+              (input)="cambiarTramo(i, { porcentaje: +$any($event.target).value })"
+            />
+            <span class="suave">%</span>
+            <button type="button" class="boton boton--peligro boton--chico" (click)="quitarTramo(i)">
+              ×
+            </button>
+          </div>
+        }
+
+        <label class="campo">
+          <span class="etiqueta">Condiciones generales por defecto</span>
+          <textarea
+            class="control"
+            rows="6"
+            placeholder="Los precios se mantienen dentro del plazo de validez indicado.&#10;El trabajo se inicia una vez acreditada la seña."
+            [ngModel]="condicionesGenerales()"
+            (ngModelChange)="condicionesGenerales.set($event)"
+          ></textarea>
+          <small class="tenue">Van al pie del PDF y se pueden editar en cada presupuesto.</small>
+        </label>
+      </div>
+    </section>
+  </div>
+}

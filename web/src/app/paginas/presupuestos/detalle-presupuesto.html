@@ -1,0 +1,271 @@
+@if (cargando()) {
+  <p class="vacio">Cargando…</p>
+} @else if (presupuesto(); as p) {
+  <header class="cabecera">
+    <div>
+      <h1 class="titulo-pagina">
+        Presupuesto {{ p.numero ?? '(sin emitir)' }}
+        <span class="chip chip--{{ p.estadoEfectivo }}">
+          {{ etiquetasEstado[p.estadoEfectivo] }}
+        </span>
+      </h1>
+      <p class="subtitulo">
+        {{ p.cliente.nombreRazonSocial }} · {{ p.fecha | fecha }} · válido hasta
+        {{ p.validoHasta | fecha }}
+      </p>
+    </div>
+    <div class="cabecera__acciones">
+      <a routerLink="/presupuestos" class="boton boton--secundario">Volver</a>
+      @if (esBorrador()) {
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="trabajando()"
+          (click)="emitir()"
+        >
+          Emitir y asignar número
+        </button>
+      } @else {
+        <a class="boton boton--secundario" [href]="urlDescarga()" target="_blank" rel="noopener">
+          Descargar PDF
+        </a>
+        <button type="button" class="boton boton--primario" (click)="prepararWhatsapp()">
+          Compartir por WhatsApp
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (esBorrador()) {
+    <div class="aviso aviso--info margen-abajo">
+      <div>
+        Es un <strong>borrador</strong>: todavía no tiene número y sus precios se recalculan contra
+        los valores de hoy. Al emitirlo toma número correlativo y sus números quedan congelados.
+      </div>
+    </div>
+  }
+
+  <div class="detalle">
+    <div>
+      <section class="tarjeta margen-abajo">
+        <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Trabajo</span></div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th class="numerico">Cant.</th>
+                <th class="numerico">P. unitario</th>
+                <th class="numerico">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of p.items; track $index) {
+                <tr>
+                  <td>
+                    {{ item.descripcion }}
+                    @if (item.costeoIncompleto) {
+                      <br />
+                      <small class="marca-vieja">Costo parcial: faltaba algún precio</small>
+                    }
+                  </td>
+                  <td class="numerico">{{ item.cantidad | cantidad }}</td>
+                  <td class="numerico importe">{{ item.precioUnitario | pesos }}</td>
+                  <td class="numerico importe">{{ item.subtotal | pesos }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Lo que la planilla no podía responder: qué margen real tuvo el trabajo. -->
+      @if (rentabilidad(); as r) {
+        <section class="tarjeta margen-abajo">
+          <div class="tarjeta__cabecera">
+            <span class="tarjeta__titulo">Rentabilidad real</span>
+          </div>
+          <div class="tarjeta__cuerpo">
+            <p class="subtitulo margen-abajo">
+              Calculada con el costo congelado al momento de emitir, no con los precios de hoy.
+            </p>
+            <dl class="desglose">
+              <div><dt>Costo del trabajo</dt><dd class="importe">{{ r.costo | pesos }}</dd></div>
+              <div><dt>Neto facturado</dt><dd class="importe">{{ p.neto | pesos }}</dd></div>
+              <div class="desglose__total">
+                <dt>Ganancia</dt>
+                <dd class="importe exito">{{ r.ganancia | pesos }}</dd>
+              </div>
+              <div>
+                <dt>Margen real sobre venta</dt>
+                <dd class="importe">{{ r.margen | pct }}</dd>
+              </div>
+            </dl>
+            @if (r.parcial) {
+              <div class="aviso aviso--alerta">
+                <div>
+                  Algún ítem se costeó sin todos los precios cargados, así que la ganancia real es
+                  menor que la que figura acá.
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (p.notasInternas) {
+        <section class="tarjeta">
+          <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Notas internas</span></div>
+          <div class="tarjeta__cuerpo">
+            <p class="suave">{{ p.notasInternas }}</p>
+            <small class="tenue">No salen en el PDF.</small>
+          </div>
+        </section>
+      }
+    </div>
+
+    <aside>
+      <section class="tarjeta margen-abajo">
+        <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Totales</span></div>
+        <div class="tarjeta__cuerpo">
+          <dl class="desglose">
+            <div><dt>Subtotal</dt><dd class="importe">{{ p.subtotal | pesos }}</dd></div>
+            @if (p.descuento && p.descuento.monto > 0) {
+              <div class="exito">
+                <dt>Descuento</dt>
+                <dd class="importe">− {{ p.descuento.monto | pesos }}</dd>
+              </div>
+              <div><dt>Neto</dt><dd class="importe">{{ p.neto | pesos }}</dd></div>
+            }
+            @if (p.iva.alicuota > 0) {
+              <div>
+                <dt>IVA {{ p.iva.alicuota | pct }}</dt>
+                <dd class="importe">{{ p.iva.monto | pesos }}</dd>
+              </div>
+            }
+            <div class="desglose__total">
+              <dt>Total</dt>
+              <dd class="importe">{{ p.total | pesos }}</dd>
+            </div>
+            <div>
+              <dt>Seña {{ p.porcentajeSenia | pct }}</dt>
+              <dd class="importe">{{ p.montoSenia | pesos }}</dd>
+            </div>
+            <div>
+              <dt>Saldo contra entrega</dt>
+              <dd class="importe">{{ p.saldoContraEntrega | pesos }}</dd>
+            </div>
+          </dl>
+
+          <div class="acciones">
+            <button
+              type="button"
+              class="boton boton--secundario"
+              (click)="mostrandoPdf.set(!mostrandoPdf())"
+            >
+              {{ mostrandoPdf() ? 'Ocultar' : 'Previsualizar' }} PDF
+            </button>
+            @if (admiteRespuesta()) {
+              <button
+                type="button"
+                class="boton boton--secundario"
+                [disabled]="trabajando()"
+                (click)="cambiarEstado(Estado.ACEPTADO)"
+              >
+                Marcar aceptado
+              </button>
+              <button
+                type="button"
+                class="boton boton--secundario"
+                [disabled]="trabajando()"
+                (click)="cambiarEstado(Estado.RECHAZADO)"
+              >
+                Marcar rechazado
+              </button>
+            }
+            @if (!esBorrador()) {
+              <button
+                type="button"
+                class="boton boton--fantasma"
+                [disabled]="trabajando()"
+                (click)="duplicar()"
+              >
+                Duplicar con precios actuales
+              </button>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="tarjeta">
+        <div class="tarjeta__cabecera"><span class="tarjeta__titulo">Cliente</span></div>
+        <div class="tarjeta__cuerpo datos-cliente">
+          <p><strong>{{ p.cliente.nombreRazonSocial }}</strong></p>
+          @if (p.cliente.cuitDni) { <p class="suave">CUIT/DNI: {{ p.cliente.cuitDni }}</p> }
+          @if (p.cliente.direccion) { <p class="suave">{{ p.cliente.direccion }}</p> }
+          @if (p.cliente.localidad) { <p class="suave">{{ p.cliente.localidad }}</p> }
+          @if (p.cliente.telefono) { <p class="suave">{{ p.cliente.telefono }}</p> }
+          @if (p.cliente.email) { <p class="suave">{{ p.cliente.email }}</p> }
+          <small class="tenue">
+            Copiado al emitir: si el cliente cambia sus datos, este presupuesto sigue diciendo lo
+            que decía.
+          </small>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  @if (mostrandoPdf()) {
+    <section class="tarjeta previsualizacion">
+      <div class="tarjeta__cabecera">
+        <span class="tarjeta__titulo">Previsualización</span>
+        <span class="tenue">Es el PDF real, el mismo que recibe el cliente.</span>
+      </div>
+      @if (urlPreview(); as url) {
+        <iframe class="previsualizacion__marco" [src]="url" title="Previsualización del PDF"></iframe>
+      }
+    </section>
+  }
+
+  @if (whatsapp(); as wa) {
+    <div class="modal" (click)="whatsapp.set(null)">
+      <div class="modal__caja" (click)="$event.stopPropagation()">
+        <h2 class="modal__titulo">Compartir por WhatsApp</h2>
+        <p class="subtitulo margen-abajo">
+          WhatsApp no permite adjuntar un archivo desde un link. Descargá el PDF, abrí el chat con
+          el mensaje ya escrito y adjuntalo ahí.
+        </p>
+
+        <ol class="pasos">
+          <li>
+            <a class="boton boton--secundario" [href]="urlDescarga()" target="_blank" rel="noopener">
+              1 · Descargar {{ wa.archivo }}
+            </a>
+          </li>
+          <li>
+            <a class="boton boton--primario" [href]="wa.url" target="_blank" rel="noopener">
+              2 · Abrir WhatsApp con el mensaje
+            </a>
+          </li>
+          <li>3 · Adjuntar el PDF en el chat.</li>
+        </ol>
+
+        <label class="campo">
+          <span class="etiqueta">Mensaje</span>
+          <textarea class="control" rows="9" readonly>{{ wa.mensaje }}</textarea>
+        </label>
+
+        <div class="modal__acciones">
+          <button type="button" class="boton boton--secundario" (click)="copiarMensaje()">
+            Copiar mensaje
+          </button>
+          <button type="button" class="boton boton--secundario" (click)="whatsapp.set(null)">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+} @else {
+  <p class="vacio">No se encontró el presupuesto.</p>
+}

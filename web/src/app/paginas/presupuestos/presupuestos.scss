@@ -1,0 +1,50 @@
+@use 'tokens' as t;
+
+/// Contadores por estado. Son botones porque además filtran: ver "3 vencidos" y no
+/// poder hacer clic para verlos sería una frustración garantizada.
+.tarjetas-resumen {
+  display: flex;
+  gap: t.$p-3;
+  flex-wrap: wrap;
+  margin-bottom: t.$p-4;
+}
+
+.resumen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: t.$p-1;
+  padding: t.$p-3;
+  min-width: 130px;
+  background: t.$papel;
+  border: 1px solid t.$borde;
+  border-radius: t.$p-radio;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s, box-shadow 0.12s;
+
+  &:hover {
+    border-color: t.$borde-fuerte;
+  }
+
+  &--activo {
+    border-color: t.$marca;
+    box-shadow: 0 0 0 3px t.$marca-clara;
+  }
+
+  &__cantidad {
+    font-size: t.$p-texto-lg;
+    line-height: 1.1;
+  }
+}
+
+.enlace-numero {
+  font-family: t.$fuente-numeros;
+  font-weight: t.$peso-medio;
+  color: t.$marca;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

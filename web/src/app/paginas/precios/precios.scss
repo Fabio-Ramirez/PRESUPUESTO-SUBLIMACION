@@ -1,0 +1,44 @@
+@use 'tokens' as t;
+
+.celda-presentacion {
+  display: flex;
+  align-items: center;
+  gap: t.$p-2;
+
+  .control {
+    width: 80px;
+  }
+}
+
+.tabla .control {
+  min-width: 110px;
+}
+
+/// Se resalta la fila que se va a escribir: con treinta renglones, saber cuáles
+/// se tocaron es la diferencia entre confiar en el guardado y revisarlo a mano.
+.fila--tocada td {
+  background: t.$marca-clara !important;
+}
+
+.suba {
+  color: t.$error;
+  font-weight: t.$peso-medio;
+}
+
+.baja {
+  color: t.$exito;
+  font-weight: t.$peso-medio;
+}
+
+/// Barra fija abajo: con la lista larga, el botón de guardar no puede quedar
+/// solamente arriba de todo.
+.barra-guardar {
+  position: sticky;
+  bottom: t.$p-4;
+  margin-top: t.$p-4;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.$p-4;
+  box-shadow: t.$sombra-2;
+  background: t.$papel;
+}
