@@ -35,6 +35,13 @@ $lateral-ancho: 220px;
     font-weight: t.$peso-fuerte;
     color: t.$marca;
   }
+
+  &__logo {
+    height: 28px;
+    width: 28px;
+    object-fit: contain;
+    border-radius: t.$p-radio;
+  }
 }
 
 // --- Menu lateral -----------------------------------------------------------
@@ -52,7 +59,18 @@ $lateral-ancho: 220px;
   z-index: 20;
 
   &__marca {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: t.$p-2;
     padding: 0 t.$p-2 t.$p-5;
+  }
+
+  &__marca-logo {
+    height: 44px;
+    width: 44px;
+    object-fit: contain;
+    border-radius: t.$p-radio;
   }
 
   &__marca-nombre {
@@ -146,30 +164,70 @@ $lateral-ancho: 220px;
   gap: t.$p-2;
   max-width: min(420px, calc(100vw - #{t.$p-5}));
 
+  /**
+   * Antes: tarjeta blanca con un filete fino de color, poco llamativa —
+   * un error y un aviso de exito se veian casi iguales de lejos. Ahora cada
+   * tipo tiene fondo teñido, borde solido y un icono propio: el color se lee
+   * de un vistazo, sin depender de leer el texto para saber si salio bien o mal.
+   */
   &__item {
     display: flex;
     align-items: flex-start;
     gap: t.$p-3;
-    padding: t.$p-3;
+    padding: t.$p-3 t.$p-4;
     border-radius: t.$p-radio;
     box-shadow: t.$sombra-3;
-    background: t.$papel;
-    border-left: 4px solid;
+    border: 1px solid;
+    border-left-width: 6px;
     font-size: t.$p-texto-sm;
+    color: t.$tinta;
 
     &--exito {
-      border-color: t.$exito;
+      background: color-mix(in srgb, t.$exito 12%, t.$papel);
+      border-color: color-mix(in srgb, t.$exito 45%, transparent);
+      border-left-color: t.$exito;
     }
     &--error {
-      border-color: t.$error;
+      // El mas llamativo de los tres a proposito: es el que mas urge leer.
+      background: color-mix(in srgb, t.$error 14%, t.$papel);
+      border-color: color-mix(in srgb, t.$error 50%, transparent);
+      border-left-color: t.$error;
+      font-weight: t.$peso-medio;
     }
     &--info {
-      border-color: t.$marca;
+      background: t.$marca-clara;
+      border-color: color-mix(in srgb, t.$marca 40%, transparent);
+      border-left-color: t.$marca;
+    }
+  }
+
+  &__icono {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: t.$p-texto-xs;
+    font-weight: t.$peso-fuerte;
+    line-height: 1;
+    color: #fff;
+
+    .avisos__item--exito & {
+      background: t.$exito;
+    }
+    .avisos__item--error & {
+      background: t.$error;
+    }
+    .avisos__item--info & {
+      background: t.$marca;
     }
   }
 
   &__texto {
     flex: 1;
+    padding-top: 1px;
   }
 
   &__detalles {

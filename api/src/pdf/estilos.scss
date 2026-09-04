@@ -61,9 +61,13 @@ body {
   &__logo {
     // Alto fijo y ancho libre: un logo apaisado y uno cuadrado ocupan lo mismo
     // de alto y el encabezado no se mueve segun quien lo cargue.
-    height: 22mm;
+    //
+    // 28mm ~= la altura real del bloque de texto de al lado (nombre + 4 lineas
+    // de datos a 9pt/1.6): antes el logo quedaba visiblemente mas chico que el
+    // nombre de la empresa aunque la caja de arriba tuviera lugar de sobra.
+    height: 28mm;
     width: auto;
-    max-width: 45mm;
+    max-width: 55mm;
     object-fit: contain;
   }
 

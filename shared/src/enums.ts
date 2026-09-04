@@ -35,6 +35,13 @@ export const CondicionIva = {
 } as const;
 export type CondicionIva = (typeof CondicionIva)[keyof typeof CondicionIva];
 
+/**
+ * El valor interno `ENVIADO` se mantiene por compatibilidad con la base y las
+ * reglas de negocio (numeracion, transiciones, indices), pero la palabra que ve
+ * el usuario es "Emitido" (ver ETIQUETAS_ESTADO): asignar el numero no implica
+ * que el presupuesto se haya mandado por algun canal, y "Enviado" lo daba a
+ * entender de forma incorrecta.
+ */
 export const EstadoPresupuesto = {
   BORRADOR: 'BORRADOR',
   ENVIADO: 'ENVIADO',
@@ -83,7 +90,9 @@ export const ETIQUETAS_TIPO_INSUMO: Record<TipoInsumo, string> = {
 
 export const ETIQUETAS_ESTADO: Record<EstadoPresupuesto, string> = {
   BORRADOR: 'Borrador',
-  ENVIADO: 'Enviado',
+  // "Emitido", no "Enviado": emitir solo asigna el numero. Mandarlo por
+  // WhatsApp o email es una accion aparte que el sistema no puede confirmar.
+  ENVIADO: 'Emitido',
   ACEPTADO: 'Aceptado',
   RECHAZADO: 'Rechazado',
   VENCIDO: 'Vencido',

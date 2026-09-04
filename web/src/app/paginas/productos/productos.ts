@@ -14,6 +14,7 @@ import {
 import { Api, type EntradaProducto } from '../../nucleo/api.js';
 import { Avisos } from '../../nucleo/avisos.js';
 import { Catalogo } from '../../nucleo/catalogo.js';
+import { Confirmar } from '../../nucleo/confirmar.js';
 import { PIPES_FORMATO, pesosDeTexto, textoDePesos } from '../../nucleo/formato.js';
 
 interface Borrador {
@@ -60,6 +61,7 @@ const VACIO: Borrador = {
 export class Productos {
   private readonly api = inject(Api);
   private readonly avisos = inject(Avisos);
+  private readonly confirmar = inject(Confirmar);
   protected readonly catalogo = inject(Catalogo);
 
   protected readonly etiquetasUnidad = ETIQUETAS_UNIDAD_USO;
@@ -271,7 +273,12 @@ export class Productos {
   }
 
   protected async desactivar(p: Producto): Promise<void> {
-    if (!confirm(`¿Dar de baja "${p.nombre}"?`)) return;
+    const ok = await this.confirmar.preguntar(`¿Dar de baja "${p.nombre}"?`, {
+      titulo: 'Dar de baja',
+      textoAceptar: 'Dar de baja',
+      peligroso: true,
+    });
+    if (!ok) return;
     try {
       await this.api.desactivarProducto(p.id);
       await this.recargar();

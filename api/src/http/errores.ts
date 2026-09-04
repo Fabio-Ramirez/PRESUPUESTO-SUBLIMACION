@@ -84,7 +84,7 @@ function traducir(err: unknown): { estado: number; mensaje: string; detalles?: u
     return {
       estado: 409,
       mensaje: campo
-        ? `Ya existe un registro con ese ${campo}.`
+        ? `Ya existe un registro con ese ${etiquetaDeCampo(campo)}.`
         : 'Ya existe un registro con esos datos.',
     };
   }
@@ -95,4 +95,19 @@ function traducir(err: unknown): { estado: number; mensaje: string; detalles?: u
 
 function esErrorDuplicado(err: unknown): err is { code: number; keyPattern?: Record<string, unknown> } {
   return typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000;
+}
+
+/**
+ * El nombre del campo Mongoose ("cuitDni") no es lo que un usuario final tiene
+ * que leer en un cartel de error. Solo cubre los campos que hoy tienen un indice
+ * unico; si se agrega uno nuevo sin entrada aca, cae al nombre crudo en vez de
+ * romper.
+ */
+function etiquetaDeCampo(campo: string): string {
+  const etiquetas: Record<string, string> = {
+    cuitDni: 'CUIT/DNI',
+    nombre: 'nombre',
+    nombreRazonSocial: 'nombre o razón social',
+  };
+  return etiquetas[campo] ?? campo;
 }

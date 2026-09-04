@@ -10,11 +10,13 @@
     >
       ☰
     </button>
+    <img class="barra__logo" src="/logo.png" alt="" />
     <span class="barra__titulo">Calculadora PRO</span>
   </header>
 
   <nav class="lateral" (click)="cerrarMenu()">
     <div class="lateral__marca">
+      <img class="lateral__marca-logo" src="/logo.png" alt="Calculadora PRO de Sublimación" />
       <span class="lateral__marca-nombre">Calculadora PRO</span>
       <span class="lateral__marca-bajada">Sublimación</span>
     </div>
@@ -55,6 +57,13 @@
   <div class="avisos" role="status" aria-live="polite">
     @for (aviso of avisos.lista(); track aviso.id) {
       <div class="avisos__item avisos__item--{{ aviso.tipo }}">
+        <span class="avisos__icono" aria-hidden="true">
+          @switch (aviso.tipo) {
+            @case ('exito') { ✓ }
+            @case ('error') { ✕ }
+            @default { ℹ }
+          }
+        </span>
         <div class="avisos__texto">
           {{ aviso.texto }}
           @if (aviso.detalles?.length) {
@@ -76,4 +85,32 @@
       </div>
     }
   </div>
+
+  <!--
+    Reemplaza el confirm() nativo del navegador (el cartel "localhost:3000 dice…"
+    que no se puede estilar). Un solo modal para toda la app, montado aca porque
+    cualquier pantalla puede pedirlo.
+  -->
+  @if (confirmar.pedido(); as p) {
+    <div class="modal" (click)="confirmar.responder(false)">
+      <div class="modal__caja" (click)="$event.stopPropagation()">
+        <h2 class="modal__titulo">{{ p.titulo }}</h2>
+        <p class="subtitulo">{{ p.mensaje }}</p>
+        <div class="modal__acciones">
+          <button type="button" class="boton boton--secundario" (click)="confirmar.responder(false)">
+            {{ p.textoCancelar }}
+          </button>
+          <button
+            type="button"
+            class="boton"
+            [class.boton--peligro]="p.peligroso"
+            [class.boton--primario]="!p.peligroso"
+            (click)="confirmar.responder(true)"
+          >
+            {{ p.textoAceptar }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

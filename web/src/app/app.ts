@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/cor
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Avisos } from './nucleo/avisos.js';
 import { Catalogo } from './nucleo/catalogo.js';
+import { Confirmar } from './nucleo/confirmar.js';
 
 interface ItemNav {
   ruta: string;
@@ -22,6 +23,7 @@ interface ItemNav {
 export class App {
   protected readonly avisos = inject(Avisos);
   protected readonly catalogo = inject(Catalogo);
+  protected readonly confirmar = inject(Confirmar);
 
   protected readonly menuAbierto = signal(false);
 

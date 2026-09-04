@@ -4,6 +4,7 @@ import { calcularAmortizacionPorUnidad, type Equipo as EquipoDominio } from '@ca
 import { Api } from '../../nucleo/api.js';
 import { Avisos } from '../../nucleo/avisos.js';
 import { Catalogo } from '../../nucleo/catalogo.js';
+import { Confirmar } from '../../nucleo/confirmar.js';
 import { PIPES_FORMATO, pesosDeTexto, textoDePesos } from '../../nucleo/formato.js';
 
 /**
@@ -26,6 +27,7 @@ import { PIPES_FORMATO, pesosDeTexto, textoDePesos } from '../../nucleo/formato.
 export class Equipos {
   private readonly api = inject(Api);
   private readonly avisos = inject(Avisos);
+  private readonly confirmar = inject(Confirmar);
   protected readonly catalogo = inject(Catalogo);
 
   protected readonly editando = signal<EquipoDominio | null>(null);
@@ -104,7 +106,12 @@ export class Equipos {
   }
 
   protected async desactivar(equipo: EquipoDominio): Promise<void> {
-    if (!confirm(`¿Dar de baja "${equipo.nombre}"?`)) return;
+    const ok = await this.confirmar.preguntar(`¿Dar de baja "${equipo.nombre}"?`, {
+      titulo: 'Dar de baja',
+      textoAceptar: 'Dar de baja',
+      peligroso: true,
+    });
+    if (!ok) return;
     try {
       await this.api.desactivarEquipo(equipo.id);
       await this.catalogo.recargar();

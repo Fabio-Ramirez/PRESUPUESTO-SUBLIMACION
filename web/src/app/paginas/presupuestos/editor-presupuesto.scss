@@ -21,7 +21,12 @@
   &__fila {
     display: flex;
     gap: t.$p-3;
-    align-items: flex-end;
+    // flex-end alineaba por abajo: la columna de precio unitario es mas alta
+    // que las otras (tiene el texto "Calculado por el motor de costeo." debajo
+    // del input), asi que su etiqueta quedaba empujada mas arriba que las
+    // demas. flex-start alinea las etiquetas por arriba siempre, sin importar
+    // cuanto contenido extra tenga alguna columna.
+    align-items: flex-start;
     flex-wrap: wrap;
   }
 

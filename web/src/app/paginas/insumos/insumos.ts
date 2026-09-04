@@ -12,6 +12,7 @@ import {
 import { Api } from '../../nucleo/api.js';
 import { Avisos } from '../../nucleo/avisos.js';
 import { Catalogo } from '../../nucleo/catalogo.js';
+import { Confirmar } from '../../nucleo/confirmar.js';
 import { PIPES_FORMATO, pesosDeTexto } from '../../nucleo/formato.js';
 
 /**
@@ -33,6 +34,7 @@ import { PIPES_FORMATO, pesosDeTexto } from '../../nucleo/formato.js';
 export class Insumos {
   private readonly api = inject(Api);
   private readonly avisos = inject(Avisos);
+  private readonly confirmar = inject(Confirmar);
   protected readonly catalogo = inject(Catalogo);
 
   protected readonly tipos = Object.values(TipoInsumo);
@@ -73,6 +75,18 @@ export class Insumos {
 
   constructor() {
     void this.catalogo.asegurarCargado().catch((e: unknown) => this.avisos.error(e));
+  }
+
+  /**
+   * Sin este reset, tipo y unidad quedaban con lo ultimo elegido: crear un
+   * "Producto base" y despues abrir "+ Nuevo insumo" de vuelta mostraba
+   * "Producto base" precargado en vez de arrancar en blanco.
+   */
+  protected abrirAlta(): void {
+    this.nuevoNombre.set('');
+    this.nuevoTipo.set(TipoInsumo.OTRO);
+    this.nuevaUnidad.set(UnidadUso.UNIDAD);
+    this.mostrandoAlta.set(true);
   }
 
   protected async crear(): Promise<void> {
@@ -142,7 +156,11 @@ export class Insumos {
   }
 
   protected async desactivar(insumo: InsumoConPrecio): Promise<void> {
-    if (!confirm(`¿Dar de baja "${insumo.nombre}"? Sale de los listados pero no se borra.`)) return;
+    const ok = await this.confirmar.preguntar(
+      `¿Dar de baja "${insumo.nombre}"? Sale de los listados pero no se borra.`,
+      { titulo: 'Dar de baja', textoAceptar: 'Dar de baja', peligroso: true },
+    );
+    if (!ok) return;
     try {
       await this.api.desactivarInsumo(insumo.id);
       await this.catalogo.recargar();
