@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ETIQUETAS_ESTADO, EstadoPresupuesto, type Presupuesto } from '@calc/shared';
 import { Api } from '../../nucleo/api.js';
 import { Avisos } from '../../nucleo/avisos.js';
+import { Confirmar } from '../../nucleo/confirmar.js';
 import { PIPES_FORMATO } from '../../nucleo/formato.js';
 
 /**
@@ -24,6 +25,7 @@ import { PIPES_FORMATO } from '../../nucleo/formato.js';
 export class Presupuestos {
   private readonly api = inject(Api);
   private readonly avisos = inject(Avisos);
+  private readonly confirmar = inject(Confirmar);
 
   protected readonly estados = Object.values(EstadoPresupuesto);
   protected readonly etiquetasEstado = ETIQUETAS_ESTADO;
@@ -102,7 +104,12 @@ export class Presupuestos {
   }
 
   protected async eliminar(p: Presupuesto): Promise<void> {
-    if (!confirm('¿Borrar este borrador? No se puede deshacer.')) return;
+    const ok = await this.confirmar.preguntar('¿Borrar este borrador? No se puede deshacer.', {
+      titulo: 'Borrar borrador',
+      textoAceptar: 'Borrar',
+      peligroso: true,
+    });
+    if (!ok) return;
     try {
       await this.api.eliminarBorrador(p.id);
       await this.recargar();

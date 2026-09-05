@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import type { Cliente } from '@calc/shared';
 import { Api } from '../../nucleo/api.js';
 import { Avisos } from '../../nucleo/avisos.js';
+import { Confirmar } from '../../nucleo/confirmar.js';
 
 interface Borrador {
   nombreRazonSocial: string;
@@ -253,6 +254,7 @@ const VACIO: Borrador = {
 export class Clientes {
   private readonly api = inject(Api);
   private readonly avisos = inject(Avisos);
+  private readonly confirmar = inject(Confirmar);
 
   protected readonly lista = signal<Cliente[]>([]);
   protected readonly cargando = signal(false);
@@ -364,7 +366,12 @@ export class Clientes {
   }
 
   protected async desactivar(c: Cliente): Promise<void> {
-    if (!confirm(`¿Dar de baja a "${c.nombreRazonSocial}"?`)) return;
+    const ok = await this.confirmar.preguntar(`¿Dar de baja a "${c.nombreRazonSocial}"?`, {
+      titulo: 'Dar de baja',
+      textoAceptar: 'Dar de baja',
+      peligroso: true,
+    });
+    if (!ok) return;
     try {
       await this.api.desactivarCliente(c.id);
       await this.recargar();

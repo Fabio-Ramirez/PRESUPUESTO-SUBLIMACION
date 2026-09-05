@@ -73,8 +73,15 @@ export const zTramosDescuento = z
     'Hay dos tramos que arrancan en la misma cantidad.',
   );
 
+/**
+ * Ninguna pantalla tiene controles de paginacion real: todas piden "la lista
+ * entera hasta N" y la muestran completa, filtrando despues por busqueda o
+ * estado. El limite de 200 se quedaba corto para Clientes, que pide 300 —
+ * el propio negocio lo iba a truncar en silencio apenas pasara de 200 clientes
+ * cargados. 1000 da margen real sin dejar de ser un limite de seguridad.
+ */
 export const zPaginacion = z.object({
   pagina: z.coerce.number().int().min(1).default(1),
-  porPagina: z.coerce.number().int().min(1).max(200).default(50),
+  porPagina: z.coerce.number().int().min(1).max(1000).default(50),
 });
 export type Paginacion = z.infer<typeof zPaginacion>;

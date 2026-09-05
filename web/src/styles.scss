@@ -248,6 +248,14 @@ button {
     letter-spacing: 0.04em;
     border-bottom: 1px solid t.$borde;
     white-space: nowrap;
+
+    // `.tabla th` (0,1,1) le gana en especificidad a `.numerico` (0,1,0) sola:
+    // un <th class="numerico"> quedaba alineado a la izquierda pese a la clase,
+    // mientras el <td class="numerico"> de abajo si se alineaba a la derecha.
+    // Esta regla, mas especifica que las dos, empareja el titulo con el dato.
+    &.numerico {
+      text-align: right;
+    }
   }
 
   td {
