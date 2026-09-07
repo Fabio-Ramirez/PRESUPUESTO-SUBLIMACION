@@ -3,12 +3,14 @@ import {
   diasEntre,
   precioEstaDesactualizado,
   resolverEstadoEfectivo,
+  stockEstaBajo,
   type Cliente,
   type Configuracion,
   type Equipo,
   type EstadoPresupuesto,
   type Insumo,
   type InsumoConPrecio,
+  type MovimientoStock,
   type PrecioInsumo,
   type Presupuesto,
   type Producto,
@@ -18,6 +20,7 @@ import type {
   ConfiguracionDoc,
   EquipoDoc,
   InsumoDoc,
+  MovimientoStockDoc,
   PrecioInsumoDoc,
   PresupuestoDoc,
   ProductoDoc,
@@ -61,6 +64,7 @@ export function aInsumo(d: InsumoDoc): Insumo {
     unidadUso: d.unidadUso,
     activo: d.activo,
     ...(d.notas ? { notas: d.notas } : {}),
+    ...(d.stockMinimo ? { stockMinimo: d.stockMinimo } : {}),
   };
 }
 
@@ -77,13 +81,15 @@ export function aPrecioInsumo(d: PrecioInsumoDoc): PrecioInsumo {
 }
 
 /**
- * Insumo + precio vigente + la senal de "este precio ya tiene mas de 30 dias".
- * El aviso se calcula aca, del lado del servidor, para que el listado y la
- * calculadora usen el mismo criterio.
+ * Insumo + precio vigente + stock actual, con las dos senales de aviso ("este
+ * precio ya tiene mas de 30 dias", "esto esta en stock bajo") calculadas aca,
+ * del lado del servidor, para que el listado y la calculadora usen el mismo
+ * criterio.
  */
 export function aInsumoConPrecio(
   d: InsumoDoc,
   precio: PrecioInsumoDoc | undefined,
+  stockActual = 0,
   ahora = new Date(),
 ): InsumoConPrecio {
   const dias = precio ? diasEntre(precio.fecha, ahora) : null;
@@ -92,6 +98,19 @@ export function aInsumoConPrecio(
     precioVigente: precio ? aPrecioInsumo(precio) : null,
     diasDesdeUltimoPrecio: dias,
     precioDesactualizado: precio ? precioEstaDesactualizado(precio.fecha, ahora) : true,
+    stockActual,
+    stockBajo: stockEstaBajo(stockActual, d.stockMinimo),
+  };
+}
+
+export function aMovimientoStock(d: MovimientoStockDoc): MovimientoStock {
+  return {
+    ...base(d as unknown as Base),
+    insumoId: id(d.insumo),
+    fecha: iso(d.fecha),
+    tipo: d.tipo,
+    cantidad: d.cantidad,
+    ...(d.motivo ? { motivo: d.motivo } : {}),
   };
 }
 

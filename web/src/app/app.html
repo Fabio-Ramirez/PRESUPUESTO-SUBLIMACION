@@ -33,11 +33,16 @@
               <span class="lateral__icono" aria-hidden="true">{{ item.icono }}</span>
               <span>{{ item.texto }}</span>
 
-              <!-- Insumos con precio viejo: el aviso vive en el menu para que se
-                   vea aunque el usuario esté en otra pantalla. -->
+              <!-- Insumos con precio viejo o stock bajo: el aviso vive en el menu
+                   para que se vea aunque el usuario esté en otra pantalla. -->
               @if (item.ruta === '/precios' && catalogo.insumosDesactualizados() > 0) {
                 <span class="lateral__globo" [title]="'Insumos con precio de más de 30 días'">
                   {{ catalogo.insumosDesactualizados() }}
+                </span>
+              }
+              @if (item.ruta === '/stock' && catalogo.insumosConStockBajo() > 0) {
+                <span class="lateral__globo" [title]="'Insumos por debajo de su stock mínimo'">
+                  {{ catalogo.insumosConStockBajo() }}
                 </span>
               }
             </a>

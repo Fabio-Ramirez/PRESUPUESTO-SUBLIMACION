@@ -69,6 +69,18 @@ export function precioEstaDesactualizado(
   return diasEntre(fechaPrecio, ahora) > dias;
 }
 
+/**
+ * true solo si hay un minimo cargado (> 0) y el stock actual esta por debajo.
+ * Sin minimo, un insumo con stock 0 (o negativo, si se cargo de menos) no se
+ * marca: el usuario todavia no dijo cual es el umbral que le importa.
+ */
+export function stockEstaBajo(
+  stockActual: number,
+  stockMinimo: number | null | undefined,
+): boolean {
+  return !!stockMinimo && stockMinimo > 0 && stockActual < stockMinimo;
+}
+
 /** validoHasta = fecha + validezDias */
 export function calcularValidoHasta(fecha: Date, validezDias: number): Date {
   const d = new Date(fecha.getTime());

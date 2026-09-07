@@ -1,5 +1,5 @@
 import { Schema, model, type InferSchemaType, type HydratedDocument, type Types } from 'mongoose';
-import { TipoInsumo, UnidadUso, calcularPrecioPorUnidadUso } from '@calc/shared';
+import { TipoInsumo, TipoMovimientoStock, UnidadUso, calcularPrecioPorUnidadUso } from '@calc/shared';
 import { campoMonto, campoOrganizacion, opcionesBase } from './comun.js';
 
 /* ================================================================== */
@@ -15,6 +15,12 @@ const esquemaInsumo = new Schema(
     unidadUso: { type: String, required: true, enum: Object.values(UnidadUso) },
     activo: { type: Boolean, required: true, default: true },
     notas: { type: String, trim: true },
+    /**
+     * Minimo para el aviso de stock bajo, en unidades de `unidadUso`. Sin
+     * cargar (undefined, equivalente a 0) el insumo nunca se marca en stock
+     * bajo — ver stockEstaBajo() en /shared.
+     */
+    stockMinimo: { type: Number, min: [0, 'El minimo de stock no puede ser negativo.'] },
   },
   opcionesBase,
 );
@@ -123,4 +129,77 @@ export async function preciosVigentes(
     mapa.set(String(d._id), PrecioInsumoModel.hydrate(d.doc));
   }
   return mapa;
+}
+
+/* ================================================================== */
+/* MovimientoStock — el historico de entradas y salidas                */
+/* ================================================================== */
+
+/**
+ * Historico igual que PrecioInsumo: nunca se edita ni se borra, se agrega uno
+ * nuevo. Es lo que permite que "cuanto stock hay" (la suma de estos registros)
+ * siempre coincida con "por que llego a ese numero" — una carga que se pudiera
+ * corregir en silencio rompe esa garantia.
+ */
+const esquemaMovimientoStock = new Schema(
+  {
+    organizacionId: campoOrganizacion(),
+    insumo: { type: Schema.Types.ObjectId, ref: 'Insumo', required: true },
+    fecha: { type: Date, required: true, default: () => new Date() },
+    tipo: { type: String, required: true, enum: Object.values(TipoMovimientoStock) },
+    /** Siempre positivo: el signo con el que afecta el stock lo da `tipo`. */
+    cantidad: { type: Number, required: true, min: [1e-9, 'La cantidad tiene que ser mayor a cero.'] },
+    motivo: { type: String, trim: true },
+  },
+  opcionesBase,
+);
+
+esquemaMovimientoStock.index({ organizacionId: 1, insumo: 1, fecha: -1 });
+
+export type MovimientoStockDoc = HydratedDocument<InferSchemaType<typeof esquemaMovimientoStock>>;
+
+const ERROR_MOVIMIENTO_INMUTABLE = new Error(
+  'Un movimiento de stock no se modifica ni se borra: cargá un movimiento nuevo para corregirlo.',
+);
+
+esquemaMovimientoStock.pre('save', function (this: MovimientoStockDoc, next) {
+  if (!this.isNew) return next(ERROR_MOVIMIENTO_INMUTABLE);
+  next();
+});
+
+for (const op of ['updateOne', 'updateMany', 'findOneAndUpdate', 'deleteOne', 'deleteMany', 'findOneAndDelete'] as const) {
+  esquemaMovimientoStock.pre(op, function (next: (e?: Error) => void) {
+    next(ERROR_MOVIMIENTO_INMUTABLE);
+  });
+}
+
+export const MovimientoStockModel = model('MovimientoStock', esquemaMovimientoStock);
+
+/**
+ * Stock actual de varios insumos en UNA consulta: suma de ENTRADA menos suma
+ * de SALIDA. Mismo motivo que preciosVigentes() — el listado de insumos no
+ * puede costar una consulta por insumo.
+ *
+ * Puede dar negativo (se cargo de menos, o se perdio/rompio mas de lo
+ * registrado): no se corrige solo, es una senal real de que el historico no
+ * refleja lo fisico y conviene cargar un ajuste.
+ */
+export async function stockActualPorInsumo(
+  organizacionId: string,
+  insumoIds: readonly Types.ObjectId[],
+): Promise<Map<string, number>> {
+  const docs = await MovimientoStockModel.aggregate<{ _id: Types.ObjectId; stock: number }>([
+    { $match: { organizacionId, insumo: { $in: [...insumoIds] } } },
+    {
+      $group: {
+        _id: '$insumo',
+        stock: {
+          $sum: {
+            $cond: [{ $eq: ['$tipo', TipoMovimientoStock.ENTRADA] }, '$cantidad', { $multiply: ['$cantidad', -1] }],
+          },
+        },
+      },
+    },
+  ]);
+  return new Map(docs.map((d) => [String(d._id), d.stock]));
 }

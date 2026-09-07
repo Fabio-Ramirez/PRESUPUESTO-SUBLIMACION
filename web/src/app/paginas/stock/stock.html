@@ -1,0 +1,217 @@
+<header class="cabecera">
+  <div>
+    <h1 class="titulo-pagina">Stock</h1>
+    <p class="subtitulo">
+      Entradas y salidas de cada insumo, cargadas a mano. El stock actual es la suma de todo el
+      historial.
+    </p>
+  </div>
+</header>
+
+@if (catalogo.insumosConStockBajo() > 0) {
+  <div class="aviso aviso--alerta margen-abajo">
+    <div>
+      Hay <strong>{{ catalogo.insumosConStockBajo() }}</strong> insumo(s) por debajo de su mínimo.
+    </div>
+  </div>
+}
+
+<div class="filtros">
+  <input
+    type="search"
+    class="control"
+    placeholder="Buscar por nombre…"
+    [ngModel]="busqueda()"
+    (ngModelChange)="busqueda.set($event)"
+  />
+  <label class="campo campo--en-linea">
+    <input
+      type="checkbox"
+      [ngModel]="soloStockBajo()"
+      (ngModelChange)="soloStockBajo.set($event)"
+    />
+    <span>Solo stock bajo</span>
+  </label>
+</div>
+
+<div class="tarjeta">
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Insumo</th>
+          <th class="numerico">Stock actual</th>
+          <th class="numerico">Mínimo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (insumo of lista(); track insumo.id) {
+          <tr>
+            <td>
+              <strong>{{ insumo.nombre }}</strong>
+              @if (insumo.stockBajo) {
+                <br />
+                <span class="marca-vieja">Por debajo del mínimo</span>
+              }
+            </td>
+            <td class="numerico">
+              <span [class.marca-vieja]="insumo.stockActual < 0 || insumo.stockBajo">
+                {{ insumo.stockActual | cantidad }}
+              </span>
+              <br />
+              <small class="tenue">{{ etiquetasUnidad[insumo.unidadUso] }}</small>
+            </td>
+            <td class="numerico celda-minimo">
+              <input
+                type="text"
+                class="control control--numero"
+                inputmode="decimal"
+                placeholder="sin mínimo"
+                [ngModel]="minimoDe(insumo)"
+                (ngModelChange)="escribirMinimo(insumo.id, $event)"
+                (blur)="guardarMinimo(insumo)"
+              />
+            </td>
+            <td class="tabla__acciones">
+              <button
+                type="button"
+                class="boton boton--secundario boton--chico"
+                (click)="abrirMovimiento(insumo, 'ENTRADA')"
+              >
+                + Entrada
+              </button>
+              <button
+                type="button"
+                class="boton boton--secundario boton--chico"
+                (click)="abrirMovimiento(insumo, 'SALIDA')"
+              >
+                − Salida
+              </button>
+              <button
+                type="button"
+                class="boton boton--fantasma boton--chico"
+                (click)="verHistorial(insumo)"
+              >
+                Historial
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="vacio">
+              @if (catalogo.cargando()) {
+                Cargando…
+              } @else {
+                No hay insumos que coincidan.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== Registrar movimiento ===== -->
+@if (insumoEnMovimiento(); as insumo) {
+  <div class="modal" (click)="insumoEnMovimiento.set(null)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">
+        {{ etiquetasMovimiento[tipoMovimiento()] }} de stock — {{ insumo.nombre }}
+      </h2>
+
+      <p class="subtitulo margen-abajo">
+        Stock actual: <strong>{{ insumo.stockActual | cantidad }}</strong>
+        {{ etiquetasUnidad[insumo.unidadUso] }}
+      </p>
+
+      <label class="campo">
+        <span class="etiqueta">Cantidad ({{ etiquetasUnidad[insumo.unidadUso] }})</span>
+        <input
+          type="text"
+          class="control control--numero"
+          inputmode="decimal"
+          placeholder="0"
+          [ngModel]="cantidadTexto()"
+          (ngModelChange)="cantidadTexto.set($event)"
+        />
+      </label>
+
+      <label class="campo">
+        <span class="etiqueta">Motivo (opcional)</span>
+        <input
+          type="text"
+          class="control"
+          placeholder="Ej: compra a proveedor, se rompieron al sublimar, conteo físico"
+          [ngModel]="motivo()"
+          (ngModelChange)="motivo.set($event)"
+        />
+      </label>
+
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="insumoEnMovimiento.set(null)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="boton boton--primario"
+          [disabled]="!cantidadTexto().trim() || guardando()"
+          (click)="guardarMovimiento()"
+        >
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Historial ===== -->
+@if (insumoEnHistorial(); as insumo) {
+  <div class="modal" (click)="insumoEnHistorial.set(null)">
+    <div class="modal__caja" (click)="$event.stopPropagation()">
+      <h2 class="modal__titulo">Historial de stock — {{ insumo.nombre }}</h2>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th class="numerico">Cantidad</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of historial(); track m.id) {
+              <tr>
+                <td>{{ m.fecha | fecha }}</td>
+                <td>
+                  <span
+                    class="chip"
+                    [class.chip--entrada]="m.tipo === 'ENTRADA'"
+                    [class.chip--salida]="m.tipo === 'SALIDA'"
+                  >
+                    {{ etiquetasMovimiento[m.tipo] }}
+                  </span>
+                </td>
+                <td class="numerico importe">
+                  {{ m.tipo === 'ENTRADA' ? '+' : '−' }}{{ m.cantidad | cantidad }}
+                </td>
+                <td class="suave">{{ m.motivo || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="vacio">Todavía no tiene movimientos cargados.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="modal__acciones">
+        <button type="button" class="boton boton--secundario" (click)="insumoEnHistorial.set(null)">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}

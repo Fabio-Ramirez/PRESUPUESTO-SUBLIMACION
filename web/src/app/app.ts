@@ -33,6 +33,7 @@ export class App {
     { ruta: '/productos', texto: 'Productos', icono: '📦', grupo: 'datos' },
     { ruta: '/insumos', texto: 'Insumos', icono: '🧾', grupo: 'datos' },
     { ruta: '/precios', texto: 'Actualizar precios', icono: '💲', grupo: 'datos' },
+    { ruta: '/stock', texto: 'Stock', icono: '🗃️', grupo: 'datos' },
     { ruta: '/equipos', texto: 'Equipos', icono: '🖨️', grupo: 'datos' },
     { ruta: '/clientes', texto: 'Clientes', icono: '👤', grupo: 'datos' },
     { ruta: '/configuracion', texto: 'Configuración', icono: '⚙️', grupo: 'ajustes' },
