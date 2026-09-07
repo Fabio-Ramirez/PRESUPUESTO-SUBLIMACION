@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
-import { TipoInsumo, UnidadUso } from '@calc/shared';
+import { TipoInsumo, TipoMovimientoStock, UnidadUso } from '@calc/shared';
 import { InsumoModel } from '../models/index.js';
 import { aInsumo } from '../dto/mapear.js';
 import { rutasCrud } from '../http/crud.js';
@@ -15,9 +15,12 @@ import {
 } from '../http/validar.js';
 import {
   historialPrecios,
+  historialStock,
   listarConPrecios,
+  registrarMovimientoStock,
   registrarPrecio,
   registrarPreciosEnLote,
+  type DatosMovimientoStock,
   type DatosPrecio,
   type LineaLote,
 } from '../servicios/insumos.js';
@@ -28,6 +31,8 @@ const zCrear = z.object({
   unidadUso: z.enum(Object.values(UnidadUso) as [string, ...string[]]),
   notas: z.string().trim().optional(),
   activo: z.boolean().optional(),
+  /** Umbral del aviso de stock bajo. Sin cargar (u en 0), nunca se avisa. */
+  stockMinimo: z.number().min(0, 'El minimo de stock no puede ser negativo.').optional(),
 });
 
 const zActualizar = zCrear.partial();
@@ -51,6 +56,13 @@ const zLote = z.object({
     .min(1, 'La lista de precios vino vacia.'),
 });
 
+const zMovimientoStock = z.object({
+  tipo: z.enum(Object.values(TipoMovimientoStock) as [string, ...string[]]),
+  cantidad: z.number().positive('La cantidad tiene que ser mayor a cero.'),
+  motivo: z.string().trim().optional(),
+  fecha: zFecha.optional(),
+});
+
 export const rutasInsumos: Router = Router();
 
 /**
@@ -61,6 +73,7 @@ export const rutasInsumos: Router = Router();
 const zFiltroPrecios = z.object({
   soloActivos: z.enum(['true', 'false']).optional().transform((v) => v !== 'false'),
   soloDesactualizados: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
+  soloStockBajo: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   tipo: z.enum(Object.values(TipoInsumo) as [string, ...string[]]).optional(),
   busqueda: z.string().trim().min(1).optional(),
 });
@@ -90,6 +103,26 @@ rutasInsumos.post(
   async (req: Request, res: Response) => {
     const precio = await registrarPrecio(req.params['id'] as string, datos<DatosPrecio>(res));
     res.status(201).json(precio);
+  },
+);
+
+rutasInsumos.get('/:id/stock', async (req: Request, res: Response) => {
+  res.json({ datos: await historialStock(req.params['id'] as string) });
+});
+
+/**
+ * Una entrada o salida nueva. Nunca se pisa un movimiento anterior: el stock
+ * actual es la suma de todo el historico, igual que con los precios.
+ */
+rutasInsumos.post(
+  '/:id/stock',
+  validarCuerpo(zMovimientoStock),
+  async (req: Request, res: Response) => {
+    const movimiento = await registrarMovimientoStock(
+      req.params['id'] as string,
+      datos<DatosMovimientoStock>(res),
+    );
+    res.status(201).json(movimiento);
   },
 );
 

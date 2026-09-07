@@ -27,6 +27,11 @@ export const rutas: Routes = [
     loadComponent: () => import('./paginas/equipos/equipos.js').then((m) => m.Equipos),
   },
   {
+    path: 'stock',
+    title: 'Stock',
+    loadComponent: () => import('./paginas/stock/stock.js').then((m) => m.Stock),
+  },
+  {
     path: 'productos',
     title: 'Productos',
     loadComponent: () => import('./paginas/productos/productos.js').then((m) => m.Productos),

@@ -8,10 +8,12 @@ import type {
   EstadoPresupuesto,
   Insumo,
   InsumoConPrecio,
+  MovimientoStock,
   PrecioInsumo,
   Presupuesto,
   Producto,
   ResultadoCosteo,
+  TipoMovimientoStock,
   UnidadUso,
 } from '@calc/shared';
 
@@ -73,6 +75,15 @@ export class Api {
     precios: (EntradaPrecio & { insumoId: string })[],
   ): Promise<{ cargados: number; precios: PrecioInsumo[] }> {
     return this.post('/insumos/precios/lote', { precios });
+  }
+
+  historialStock(insumoId: string): Promise<{ datos: MovimientoStock[] }> {
+    return this.get(`/insumos/${insumoId}/stock`);
+  }
+
+  /** Una entrada o salida nueva. Nunca se pisa un movimiento anterior. */
+  registrarMovimientoStock(insumoId: string, datos: EntradaMovimientoStock): Promise<MovimientoStock> {
+    return this.post(`/insumos/${insumoId}/stock`, datos);
   }
 
   // --- Equipos --------------------------------------------------------------
@@ -244,6 +255,13 @@ export interface EntradaPrecio {
   /** En centavos enteros. */
   precioPresentacion: number;
   proveedor?: string;
+}
+
+export interface EntradaMovimientoStock {
+  tipo: TipoMovimientoStock;
+  /** En unidades de `unidadUso` del insumo. Siempre positivo. */
+  cantidad: number;
+  motivo?: string;
 }
 
 /**

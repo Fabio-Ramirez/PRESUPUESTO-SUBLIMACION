@@ -5,6 +5,7 @@ import type {
   MotivoIncompleto,
   TipoDescuento,
   TipoInsumo,
+  TipoMovimientoStock,
   UnidadUso,
 } from './enums.js';
 
@@ -44,6 +45,11 @@ export interface Insumo extends EntidadBase {
   unidadUso: UnidadUso;
   activo: boolean;
   notas?: string;
+  /**
+   * Minimo para el aviso de stock bajo, en unidades de `unidadUso`. Sin cargar
+   * (o en 0) el insumo nunca se marca en stock bajo, sin importar cuanto tenga.
+   */
+  stockMinimo?: number;
 }
 
 /** Como se compra: resma de 100 hojas, botella de 100 ml, caja de 6 unidades. */
@@ -68,12 +74,33 @@ export interface PrecioInsumo extends EntidadBase {
   proveedor?: string;
 }
 
-/** Insumo + su precio vigente resuelto. Lo que consume el listado y la calculadora. */
+/**
+ * Insumo + su precio vigente y su stock resueltos. Lo que consume el listado y
+ * la calculadora.
+ */
 export interface InsumoConPrecio extends Insumo {
   precioVigente: PrecioInsumo | null;
   /** Dias transcurridos desde el precio vigente. null si nunca tuvo precio. */
   diasDesdeUltimoPrecio: number | null;
   precioDesactualizado: boolean;
+  /** Suma de entradas menos salidas. Puede dar negativo si se cargo de menos. */
+  stockActual: number;
+  /** true solo si hay `stockMinimo` cargado (> 0) y `stockActual` esta por debajo. */
+  stockBajo: boolean;
+}
+
+/**
+ * Movimiento de stock. Historico igual que PrecioInsumo: nunca se edita ni se
+ * borra, se agrega uno nuevo — asi el stock actual (la suma) siempre coincide
+ * con "por que" llego a ese numero.
+ */
+export interface MovimientoStock extends EntidadBase {
+  insumoId: Id;
+  fecha: FechaIso;
+  tipo: TipoMovimientoStock;
+  /** Siempre positivo. El signo con el que afecta el stock lo da `tipo`. */
+  cantidad: number;
+  motivo?: string;
 }
 
 /* ------------------------------------------------------------------ */

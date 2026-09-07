@@ -30,6 +30,11 @@ export class Catalogo {
     () => this.insumos().filter((i) => i.precioDesactualizado).length,
   );
 
+  /** Cuantos insumos estan por debajo de su stockMinimo configurado. */
+  readonly insumosConStockBajo = computed(
+    () => this.insumos().filter((i) => i.stockBajo).length,
+  );
+
   /**
    * El tipo explicito importa: sin el, el objeto por defecto ensancha Centavos a
    * number y el motor de costeo deja de aceptar el resultado.

@@ -265,6 +265,48 @@ try {
   chequear('no se cargo nada del lote fallido', papelDespues.datos.length, 2);
 
   /* ============================================================== */
+  console.log('\nSTOCK — entradas y salidas a mano, siempre historico');
+  linea();
+  await ok('POST', `/insumos/${papel.id}/stock`, { tipo: 'ENTRADA', cantidad: 500, motivo: 'Compra a proveedor' });
+  await ok('POST', `/insumos/${papel.id}/stock`, { tipo: 'SALIDA', cantidad: 30, motivo: 'Se uso en un trabajo' });
+
+  const conStock = await ok('GET', '/insumos/con-precios');
+  const papelConStock = conStock.datos.find((i) => i.id === papel.id);
+  chequear('stock actual = entradas - salidas', papelConStock.stockActual, 470);
+  chequear('sin minimo cargado, no es stock bajo', papelConStock.stockBajo, false);
+
+  await ok('PATCH', `/insumos/${papel.id}`, { stockMinimo: 500 });
+  const conMinimo = await ok('GET', '/insumos/con-precios');
+  chequear(
+    'con minimo 500 y stock 470, SI es stock bajo',
+    conMinimo.datos.find((i) => i.id === papel.id).stockBajo,
+    true,
+  );
+
+  const soloBajo = await ok('GET', '/insumos/con-precios?soloStockBajo=true');
+  chequear('filtro soloStockBajo trae solo ese insumo', soloBajo.datos.length, 1);
+  chequear('y es el correcto', soloBajo.datos[0].id, papel.id);
+
+  const historialStock = await ok('GET', `/insumos/${papel.id}/stock`);
+  chequear('historial: 2 movimientos', historialStock.datos.length, 2);
+  chequear('el mas nuevo primero (la salida)', historialStock.datos[0].tipo, 'SALIDA');
+
+  // Una salida mayor al stock disponible no se bloquea: es una senal real
+  // (se cargo de menos, o se perdio mas de lo registrado), no un error de carga.
+  await ok('POST', `/insumos/${papel.id}/stock`, { tipo: 'SALIDA', cantidad: 1000 });
+  const conStockNegativo = await ok('GET', '/insumos/con-precios');
+  chequear(
+    'una salida mayor al stock disponible se permite (stock negativo)',
+    conStockNegativo.datos.find((i) => i.id === papel.id).stockActual,
+    -530,
+  );
+
+  const movimientoInvalido = await api('POST', `/insumos/${papel.id}/stock`, { tipo: 'SALIDA', cantidad: 0 });
+  chequear('cantidad 0 se rechaza -> 400', movimientoInvalido.estado, 400);
+
+  await ok('PATCH', `/insumos/${papel.id}`, { stockMinimo: 0 });
+
+  /* ============================================================== */
   console.log('\nCOSTEO PARCIAL — un insumo sin precio no rompe nada');
   linea();
   const caja = await ok('POST', '/insumos', { nombre: 'Caja de carton', tipo: 'PACKAGING', unidadUso: 'UNIDAD' });

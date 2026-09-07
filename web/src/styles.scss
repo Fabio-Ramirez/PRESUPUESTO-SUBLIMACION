@@ -296,11 +296,25 @@ button {
   border: 1px solid currentcolor;
 
   // Una clase por estado, generada desde el mismo mapa que usa el sello del PDF.
+  // Es especifico de presupuestos: no reusar para otra cosa que tenga "tipos"
+  // (un movimiento de stock, por ejemplo) aunque el color de casualidad quede
+  // parecido — son dos escalas de significado distintas.
   @each $estado, $color in t.$estados {
     &--#{$estado} {
       color: $color;
       background: color-mix(in srgb, $color 8%, transparent);
     }
+  }
+
+  // Entrada/salida de stock: verde/naranja por convencion contable, sin pedirle
+  // prestado el color a un estado de presupuesto.
+  &--entrada {
+    color: t.$exito;
+    background: color-mix(in srgb, t.$exito 8%, transparent);
+  }
+  &--salida {
+    color: t.$alerta;
+    background: color-mix(in srgb, t.$alerta 8%, transparent);
   }
 }
 

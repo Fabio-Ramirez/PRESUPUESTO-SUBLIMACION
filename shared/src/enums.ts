@@ -51,6 +51,22 @@ export const EstadoPresupuesto = {
 } as const;
 export type EstadoPresupuesto = (typeof EstadoPresupuesto)[keyof typeof EstadoPresupuesto];
 
+/**
+ * Movimientos de stock. Siempre a mano (no se descuenta solo al emitir un
+ * presupuesto): el mismo insumo puede consumirse fuera de un presupuesto, o
+ * producirse antes de cotizar, asi que atarlo a la emision seria adivinar.
+ */
+export const TipoMovimientoStock = {
+  ENTRADA: 'ENTRADA',
+  SALIDA: 'SALIDA',
+} as const;
+export type TipoMovimientoStock = (typeof TipoMovimientoStock)[keyof typeof TipoMovimientoStock];
+
+export const ETIQUETAS_MOVIMIENTO_STOCK: Record<TipoMovimientoStock, string> = {
+  ENTRADA: 'Entrada',
+  SALIDA: 'Salida',
+};
+
 /** Motivos por los que un costeo sale incompleto. La UI los traduce a un cartel. */
 export const MotivoIncompleto = {
   INSUMO_SIN_PRECIO: 'INSUMO_SIN_PRECIO',
@@ -71,6 +87,9 @@ export const DEFAULTS = {
   /** Dias antes de considerar "viejo" el precio de un insumo en el listado. */
   DIAS_PRECIO_DESACTUALIZADO: 30,
 } as const;
+
+/** Sin minimo configurado (0 o sin cargar), el insumo nunca se marca en stock bajo. */
+export const SIN_MINIMO_STOCK = 0;
 
 export const ETIQUETAS_UNIDAD_USO: Record<UnidadUso, string> = {
   UNIDAD: 'unidad',

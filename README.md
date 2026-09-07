@@ -36,8 +36,8 @@ api/
   src/dto/          mappers documento -> contrato de /shared
   src/pdf/          plantilla.ts (HTML tipado), estilos.scss, generador.ts
 web/
-  src/app/nucleo/     cliente HTTP tipado, pipes de formato, catálogo, avisos
-  src/app/paginas/    calculadora, insumos, precios, equipos, productos,
+  src/app/nucleo/     cliente HTTP tipado, pipes de formato, catálogo, avisos, confirmar
+  src/app/paginas/    calculadora, insumos, precios, stock, equipos, productos,
                       presupuestos, clientes, configuración
 scripts/
   verificar-planilla.mjs   reproduce el ejemplo del Excel, fila por fila
@@ -124,8 +124,16 @@ email) que el sistema no puede confirmar. El valor interno del enum sigue siendo
 `ENVIADO` por compatibilidad con la numeración y las transiciones ya definidas; solo
 cambió la palabra que ve el usuario (`ETIQUETAS_ESTADO` en `shared/src/enums.ts`).
 
+**El stock es manual, no se descuenta solo al emitir un presupuesto.** El mismo
+insumo se puede consumir fuera de un presupuesto, o producirse antes de cotizar,
+así que atarlo a la emisión sería adivinar. Cada entrada y salida es un
+`MovimientoStock` histórico (mismo patrón que `PrecioInsumo`: nunca se edita ni se
+borra, se agrega uno nuevo) y el stock actual es la suma de todo ese historial.
+Puede dar negativo — no se corrige solo, es una señal real de que el historial no
+refleja lo físico, no un error para bloquear.
+
 ## Fuera de alcance
 
-Facturación electrónica AFIP, stock, órdenes de producción, cobros y pagos,
-multi-usuario, app mobile. Los esquemas ya llevan `organizacionId` con índices
-compuestos, así que agregar multi-usuario será llenar el campo, no migrar colecciones.
+Facturación electrónica AFIP, órdenes de producción, cobros y pagos, multi-usuario,
+app mobile. Los esquemas ya llevan `organizacionId` con índices compuestos, así que
+agregar multi-usuario será llenar el campo, no migrar colecciones.
